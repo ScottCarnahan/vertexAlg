@@ -8,6 +8,7 @@ module
 public import Mathlib.RingTheory.HahnSeries.Binomial
 public import VertexAlg.GroupActionEquiv
 public import VertexAlg.toMathlib.NegOnePow
+public import VertexAlg.toMathlib.PointwiseSMul
 
 
 /-!
@@ -484,20 +485,21 @@ def leftTensorMap {R} [CommSemiring R] [AddCommMonoid U] [Module R V] [Module R 
       intro r y
       ext; simp [smul_tmul'] }
 
-/- needs updated Mathlib
-open AddMonoidAlgebra Finsupp HahnModule in
+open MonoidAlgebra Finsupp Finset in
+omit [IsOrderedCancelAddMonoid Γ] in
 theorem ofFinsupp_smul_coeff {R} [CommSemiring R] [Module R V] (f : AddMonoidAlgebra R Γ)
     (x : HahnModule Γ₁ R V) :
     ((HahnModule.of R).symm ((HahnSeries.ofFinsupp f) • x)).coeff =
       f • ((HahnModule.of R).symm x).coeff := by
   ext g
-  rw [coeff_smul, AddMonoidAlgebra.smul_eq, HahnSeries.coeff_ofFinsupp]
+  rw [coeff_smul, AddMonoidAlgebra.smul_eq, HahnSeries.coeff_ofFinsupp']
   refine (Finset.sum_of_injOn (M := V) id (Set.injOn_id _) ?_ ?_ ?_).symm
   · intro gh h
-    simpa [mem_coe, mem_vaddAntidiagonal_iff] using h
+    simpa [mem_coe, mem_vaddAntidiagonal] using h
   · intro gh h hn
     simp only [mem_vaddAntidiagonal] at h
-    simp only [id_eq, Set.image_id', mem_coe, mem_vaddAntidiagonal_iff, h.2.2, and_true] at hn
+    simp only [id_eq, Set.image_id', SetLike.mem_coe, mem_vaddAntidiagonal', mem_support_iff, ne_eq,
+      Function.mem_support, h.2.2, and_true, not_and, not_not] at hn
     aesop
   · intro gh h
     simp
@@ -519,7 +521,7 @@ def ofAddMonoidAlgebra [PartialOrder Γ] [AddCancelCommMonoid Γ] [IsOrderedCanc
       ext g
       rw [← of_symm_smul_of_eq_mul,
         HahnModule.ofFinsupp_smul_coeff x (HahnModule.of R (ofFinsupp y)),
-        Equiv.symm_apply_apply, coeff_ofFinsupp, coeff_ofFinsupp,
+        Equiv.symm_apply_apply, coeff_ofFinsupp, coeff_ofFinsupp',
         AddMonoidAlgebra.smul_eq_addMonoidAlgebra_mul]
   map_zero' := rfl
   map_add' x y := by
@@ -530,10 +532,10 @@ def ofAddMonoidAlgebra [PartialOrder Γ] [AddCancelCommMonoid Γ] [IsOrderedCanc
     by_cases h : g = 0
     · simp [h, algebraMap_apply]
     · simp [algebraMap_apply, coeff_single_of_ne h]
+
 end HahnSeries
 
 namespace HahnModule
--/
 
 
 
@@ -708,10 +710,10 @@ end HahnSeries
 namespace HahnModule
 
 variable {Γ Γ' Γ₁ Γ₂ : Type*} [PartialOrder Γ] [PartialOrder Γ'] [PartialOrder Γ₁] [PartialOrder Γ₂]
-[VAdd Γ Γ₁] [IsOrderedCancelVAdd Γ Γ₁] [VAdd Γ' Γ₂] [IsOrderedCancelVAdd Γ' Γ₂] [Zero R]
+[VAdd Γ Γ₁] [IsOrderedCancelVAdd Γ Γ₁] [VAdd Γ' Γ₂] [IsOrderedCancelVAdd Γ' Γ₂] [MulZeroClass R]
 [AddCommMonoid V] [SMulWithZero R V]
 
-/- needs updated mathlib
+open Finset Function in
 theorem embDomain_smul (φ : Γ ↪o Γ') (f : Γ₁ ↪o Γ₂) (hf : ∀ (g : Γ) y, f (g +ᵥ y) = φ g +ᵥ f y)
     (x : HahnSeries Γ R) (y : HahnModule Γ₁ R V) :
     HahnSeries.embDomain f ((of R).symm (x • y)) =
@@ -722,12 +724,12 @@ theorem embDomain_smul (φ : Γ ↪o Γ') (f : Γ₁ ↪o Γ₂) (hf : ∀ (g : 
   · obtain ⟨g, rfl⟩ := hg
     simp only [coeff_smul, HahnSeries.embDomain_coeff]
     trans
-      ∑ ij ∈ (VAddAntidiagonal x.isPWO_support ((of R).symm y).isPWO_support g).map
+      ∑ ij ∈ (Finset.VAddAntidiagonal x.isPWO_support ((of R).symm y).isPWO_support g).map
           (φ.toEmbedding.prodMap f.toEmbedding),
           (HahnSeries.embDomain φ x).coeff ij.1 •
           (HahnSeries.embDomain f ((of R).symm y)).coeff ij.2
     · simp
-    apply sum_subset
+    apply Finset.sum_subset
     · rintro ⟨i, j⟩ hij
       simp only [mem_map, mem_vaddAntidiagonal, HahnSeries.mem_support, ne_eq,
         Embedding.coe_prodMap, RelEmbedding.coe_toEmbedding, Prod.exists, Prod.map_apply,
@@ -745,12 +747,12 @@ theorem embDomain_smul (φ : Γ ↪o Γ') (f : Γ₁ ↪o Γ₂) (hf : ∀ (g : 
       exact ⟨i, j, h1, rfl⟩
   · rw [HahnSeries.embDomain_notin_range hg, eq_comm]
     contrapose! hg
-    obtain ⟨i, hi, _, hj, h⟩ :=
-      support_smul_subset_vadd_support' <| (HahnSeries.mem_support _ g).mpr hg
+    obtain ⟨_, hi, _, hj, h⟩ :=
+      support_smul_subset_vadd_support <| (HahnSeries.mem_support _ g).mpr hg
     obtain ⟨i, _, rfl⟩ := HahnSeries.support_embDomain_subset hi
     obtain ⟨j, _, rfl⟩ := HahnSeries.support_embDomain_subset hj
     exact ⟨i +ᵥ j, h ▸ hf i j⟩
--/
+
 end HahnModule
 
 end Multiplication
