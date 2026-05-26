@@ -7,7 +7,7 @@ module
 
 public import Mathlib.Algebra.Order.Monoid.Prod
 public import Mathlib.Algebra.Order.Hom.Monoid
-public import VertexAlg.RevLex
+public import VertexAlg.Extras.RevLex
 
 /-!
 Add things to `Mathlib.Algebra.Order.Monoid.Prod` (unlikely to happen)

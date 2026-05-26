@@ -7,7 +7,7 @@ module
 
 public import Mathlib.Algebra.Vertex.VertexOperator
 public import Mathlib.RingTheory.LaurentSeries
-public import VertexAlg.HVertexOperator
+public import VertexAlg.VertexBasic.HVertexOperator
 public import VertexAlg.toMathlib.Binomial
 
 /-!

@@ -6,7 +6,7 @@ Authors: Scott Carnahan
 module
 
 public import Mathlib.Algebra.Lie.Loop
-public import VertexAlg.VertexOperator
+public import VertexAlg.VertexBasic.VertexOperator
 
 /-!
 # Lattice vertex operators
@@ -30,3 +30,5 @@ these operator series.
 noncomputable section
 
 variable {R V : Type*} [CommRing R] [AddCommGroup V] [Module R V]
+
+-- import Affine.

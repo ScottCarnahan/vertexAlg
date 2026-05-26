@@ -5,7 +5,7 @@ Authors: Scott Carnahan
 -/
 module
 
-public import VertexAlg.VertexOperator
+public import VertexAlg.VertexBasic.VertexOperator
 
 /-!
 # Vertex algebras

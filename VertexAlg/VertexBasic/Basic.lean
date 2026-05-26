@@ -5,7 +5,7 @@ Authors: Scott Carnahan
 -/
 module
 
-public import VertexAlg.Defs
+public import VertexAlg.VertexBasic.Defs
 
 /-!
 # Basic results on Vertex algebras

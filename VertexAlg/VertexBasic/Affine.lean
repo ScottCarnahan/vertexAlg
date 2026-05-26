@@ -5,7 +5,7 @@ Authors: Scott Carnahan
 -/
 module
 
-public import VertexAlg.Basic
+public import VertexAlg.VertexBasic.Basic
 public import Mathlib.Algebra.Lie.Loop
 
 /-!

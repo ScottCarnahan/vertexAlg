@@ -6,7 +6,7 @@ Authors: Scott Carnahan
 module
 
 public import Mathlib.Algebra.Order.AddTorsor
-public import VertexAlg.MonoidProd
+public import VertexAlg.Extras.MonoidProd
 public import Mathlib.GroupTheory.GroupAction.Hom
 
 /-!
