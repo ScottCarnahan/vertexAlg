@@ -278,8 +278,7 @@ lemma twoCocycleOfSplitting_ofTwoCocycle (h : IsLieAbelian N) (c : twoCocycle R 
   ext x y
   apply (ofTwoCocycle c).incl_injective
   rw [twoCochain_val_apply, (ofTwoCocycle c).incl_twoCocycleOfSplitting_apply,
-    twoCochain_val_apply]
-  erw [bracket_sectionTwoCocycleRight h c]
+    twoCochain_val_apply, bracket_sectionTwoCocycleRight h c]
   simp
 
 lemma bracket_of_splitting (hp : Function.LeftInverse p E.incl) (x y : M) :

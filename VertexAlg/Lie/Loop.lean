@@ -421,7 +421,7 @@ section Grading
 noncomputable instance [DecidableEq A] [AddCommMonoid A] :
     GradedLieAlgebra (fun (a : A) ↦ (DirectSum.decomposeTensor
       (fun b ↦ AddMonoidAlgebra.grade R b) L a)) where
-  bracket_mem i j k gi gj hijk hi hj := by
+  bracket_mem i j gi gj hi hj := by
     obtain ⟨xi, hxi⟩ := hi
     obtain ⟨xj, hxj⟩ := hj
     simp only [← hxi, ← hxj]
@@ -437,10 +437,7 @@ noncomputable instance [DecidableEq A] [AddCommMonoid A] :
         simp only [DirectSum.decomposeTensor, LinearMap.mem_range]
         obtain ⟨x, hx⟩ := x
         obtain ⟨u, hu⟩ := u
-        have : x * u ∈ AddMonoidAlgebra.grade R k := by
-          rw [← hijk]
-          exact SetLike.mul_mem_graded hx hu
-        use ⟨x * u, this⟩ ⊗ₜ ⁅y, v⁆
+        use ⟨x * u, SetLike.mul_mem_graded hx hu⟩ ⊗ₜ ⁅y, v⁆
         simp
       | add u v hu hv =>
         rw [LinearMap.map_add, lie_add]
@@ -609,7 +606,6 @@ lemma proj_monomial' [IsAddTorsionFree R] (Φ : LinearMap.BilinForm R L)
       (AddMonoidAlgebra.single a (1 : R) ⊗ₜ x):=
   rfl
 
--- Introduce `A`-grading before the derivation - Any grading yields a derivation.
 /-
 open Finsupp Pointwise in
 /-- The energy derivation on the centrally extended Lie algebra, that scalar-multiplies an
@@ -651,7 +647,6 @@ def energy [IsAddTorsionFree R] (Φ : LinearMap.BilinForm R L)
         sorry
       }
 -/
-
 
 -- smooth rep : U(positive part)v finite dimensional for all v.
 

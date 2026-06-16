@@ -498,7 +498,7 @@ theorem ofFinsupp_smul_coeff {R} [CommSemiring R] [Module R V] (f : AddMonoidAlg
     simpa [mem_coe, mem_vaddAntidiagonal] using h
   · intro gh h hn
     simp only [mem_vaddAntidiagonal] at h
-    simp only [id_eq, Set.image_id', SetLike.mem_coe, mem_vaddAntidiagonal', mem_support_iff, ne_eq,
+    simp only [id_eq, Set.image_id', SetLike.mem_coe, mem_vaddAntidiagonal, mem_support_iff, ne_eq,
       Function.mem_support, h.2.2, and_true, not_and, not_not] at hn
     aesop
   · intro gh h
@@ -724,8 +724,8 @@ theorem embDomain_smul (φ : Γ ↪o Γ') (f : Γ₁ ↪o Γ₂) (hf : ∀ (g : 
   · obtain ⟨g, rfl⟩ := hg
     simp only [coeff_smul, HahnSeries.embDomain_coeff]
     trans
-      ∑ ij ∈ (Finset.VAddAntidiagonal x.isPWO_support ((of R).symm y).isPWO_support g).map
-          (φ.toEmbedding.prodMap f.toEmbedding),
+      ∑ ij ∈ (Finset.VAddAntidiagonal g (Set.VAddAntidiagonal.finite_of_isPWO x.isPWO_support
+        ((of R).symm y).isPWO_support g)).map (φ.toEmbedding.prodMap f.toEmbedding),
           (HahnSeries.embDomain φ x).coeff ij.1 •
           (HahnSeries.embDomain f ((of R).symm y)).coeff ij.2
     · simp
@@ -806,9 +806,11 @@ theorem cosupp_subset_iunion_cosupp_left [AddCommMonoid Γ] [PartialOrder Γ] [P
     [VAdd Γ Γ₁] [IsOrderedCancelVAdd Γ Γ₁] [IsOrderedCancelAddMonoid Γ] [AddCommMonoid R]
     [AddCommMonoid V] (s : SummableFamily Γ R α)
     (t : SummableFamily Γ₁ V β) (g : Γ₁) {gh : Γ × Γ₁}
-    (hgh : gh ∈ VAddAntidiagonal s.isPWO_iUnion_support t.isPWO_iUnion_support g) :
+    (hgh : gh ∈ VAddAntidiagonal g (Set.VAddAntidiagonal.finite_of_isPWO s.isPWO_iUnion_support
+      t.isPWO_iUnion_support g)) :
     Set.Finite.toFinset (s.finite_co_support (gh.1)) ⊆
-    (VAddAntidiagonal s.isPWO_iUnion_support t.isPWO_iUnion_support g).biUnion
+    (VAddAntidiagonal g (Set.VAddAntidiagonal.finite_of_isPWO s.isPWO_iUnion_support
+      t.isPWO_iUnion_support g)).biUnion
       fun (g' : Γ × Γ₁) => Set.Finite.toFinset (s.finite_co_support (g'.1)) := by
   intro a ha
   simp_all only [mem_vaddAntidiagonal, Set.mem_iUnion, mem_support, ne_eq, Set.Finite.mem_toFinset,

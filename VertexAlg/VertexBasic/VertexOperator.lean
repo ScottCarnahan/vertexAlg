@@ -676,9 +676,8 @@ theorem resProd_nat_one_right_apply (n : ℕ) (A : VertexOperator R V) :
     · rw [show n + (-m - 1) - (n - m).toNat = -1 by omega, one_ncoeff_neg_one, LinearMap.map_zero,
         Pi.zero_apply, LinearMap.zero_apply, sub_eq_zero, ← smul_assoc (n : ℤ).negOnePow]
       congr 2
-      · rw [Units.ext_iff, Units.val_smul, Units.smul_def, zsmul_eq_mul', Int.cast_eq,
-          ← Units.val_mul, ← Int.negOnePow_sub]
-        simp [h, hmn]
+      · rw [Units.smul_eq_mul, ← Int.negOnePow_add, Int.negOnePow_eq_iff]
+        grind
       · rw [Ring.choose_natCast, Ring.choose_natCast]
         refine Int.ofNat_inj.mpr ?_
         rw [← Nat.choose_symm (by omega), show (n - m).toNat = n - m.toNat by omega]

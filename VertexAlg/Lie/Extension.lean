@@ -8,7 +8,8 @@ module
 public import Mathlib.Algebra.Lie.Extension
 
 /-!
-Add To `Mathlib.Algebra.Lie.Extension`
+Some should be added To `Mathlib.Algebra.Lie.Extension`. However, specialized lemmata which are
+better written as general principles are frowned upon.
 -/
 
 @[expose] public section
@@ -119,18 +120,11 @@ lemma incl_sectLeft (E : Extension R N M) (x : E.incl.range) :
   exact Subtype.eq_iff.mp <| LinearEquiv.apply_symm_apply _ x
  -/
 
-lemma eq_of_proj_eq (E : Extension R N M) {p : E.L →ₗ[R] N} {x y : E.L} (h : p x = p y)
-    (hp : LeftInverse p E.incl) (hE : E.proj x = E.proj y) : x = y := by
-  have : x - y ∈ LinearMap.ker E.proj.toLinearMap := LinearMap.sub_mem_ker_iff.mpr hE
-  have : ∃ z : N, E.incl z = x - y := by
-    rw [← LieHom.ker_toSubmodule] at this
-    rw [← LieHom.mem_range, E.IsExtension.exact]
-    exact this
-  obtain ⟨z, hz⟩ := this
-  have : p (x - y) = 0 := by rw [LinearMap.map_sub, h, sub_eq_zero]
-  have : z = 0 := by rw [← hp z, hz, this]
-  rw [this, map_zero] at hz
-  rw [← sub_eq_zero, ← hz]
+lemma eq_of_proj_eq (E : Extension R N M) {x y : E.L} {s : M →ₗ[R] E.L} (hs : LeftInverse E.proj s)
+    (hK : E.toKer.symm ⟨x - s (E.proj x), by simp [hs.eq]⟩ =
+      E.toKer.symm ⟨y - s (E.proj y), by simp [hs.eq]⟩) (hp : E.proj x = E.proj y) :
+    x = y := by
+  rwa [EquivLike.apply_eq_iff_eq, Subtype.mk_eq_mk, hp, sub_left_inj] at hK
 
 /-- `Extension`s are equivalent iff there is a homomorphism making a commuting diagram. -/
 @[ext] structure Equiv (E' : Extension R N M) where
