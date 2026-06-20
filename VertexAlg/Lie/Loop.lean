@@ -108,7 +108,7 @@ lemma grade_eq (a : A) :
       simp [hxw, hxz]
 
 -- use DirectSum.congrAddEquiv: gives an isomorphism of direct sums from component isoms.
-/-
+/-²⁴
 open DirectSum in
 instance [DecidableEq A] {M N : Type*} [AddCommGroup M] [Module R M]
     (ℳ : A → Submodule R M) [DirectSum.Decomposition ℳ] [AddCommGroup N] [Module R N] :

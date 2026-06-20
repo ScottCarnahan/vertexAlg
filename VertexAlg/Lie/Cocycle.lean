@@ -419,10 +419,9 @@ def coboundary_second_summand_multilinear (n : ℕ) (f : L [⋀^Fin (n + 1)]→�
     congr 1
     by_cases hik : i = k
     · have hjk := ne_of_gt <| hik.symm ▸ h
-      simp only [hik]
       simp_rw [show ∀ (z : L), Function.update g k z i = z by
         intros; rw [hik, Function.update_self], show ∀ (z : L), Function.update g k z j = g j by
-        intros; rw [← hik, Function.update_of_ne (ne_of_lt h).symm]]
+        intros; rw [← hik, Function.update_of_ne (ne_of_lt h).symm], hik]
       simp_rw [Fin.removeNth_update_of_gt (hik.symm ▸ h), Fin.removeNth_update]
       simp only [add_lie]
       rw [Fin.cons_eq_update_cons 0 (⁅x, g j⁆ + ⁅y, g j⁆), Fin.cons_eq_update_cons 0 ⁅x, g j⁆,

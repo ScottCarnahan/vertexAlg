@@ -349,7 +349,7 @@ variable [PartialOrder Γ] [SMul R V]
 @[simp] theorem of_symm_zsmul {V} [AddCommGroup V] [SMul R V] (n : ℤ) (x : HahnModule Γ R V) :
     (of R).symm (n • x) = n • (of R).symm x := rfl
 
-instance instBaseSMulZeroClass' [Zero V] [SMulZeroClass R V] :
+instance instBaseSMulZeroClass' {V} [Zero V] [SMulZeroClass R V] :
     SMulZeroClass R (HahnModule Γ R V) :=
   inferInstanceAs <| SMulZeroClass R (HahnSeries Γ V)
 
@@ -397,8 +397,8 @@ def equivDomain [Semiring R] [AddCommMonoid V] [Module R V] [PartialOrder Γ₁]
 end BaseStructure
 
 variable [PartialOrder Γ] [PartialOrder Γ₁] [AddCommMonoid Γ] [IsOrderedCancelAddMonoid Γ]
-[AddAction Γ Γ₁] [IsOrderedCancelVAdd Γ Γ₁] [Semiring R] [AddCommMonoid V] [Module R V]
-[AddCommMonoid U] [Module R U]
+  [AddAction Γ Γ₁] [IsOrderedCancelVAdd Γ Γ₁] [Semiring R] [AddCommMonoid V] [Module R V]
+  [AddCommMonoid U] [Module R U]
 
 /-- HahnModule coefficient-wise map as a HahnSeries-linear map. -/
 def hmap (f : U →ₗ[R] V) :
@@ -432,7 +432,7 @@ theorem smul_comm {R} [CommSemiring R] [Module R V] (r : R) (x : HahnSeries Γ R
 open TensorProduct in
 set_option backward.isDefEq.respectTransparency false in
 /-- The map that tensors a Hahn series with a module on the right. -/
-def rightTensorMap {R} [CommSemiring R] [AddCommMonoid U] [Module R V] [Module R U] :
+def rightTensorMap {R} [CommSemiring R] [Module R V] [Module R U] :
     HahnModule Γ₁ R U ⊗[R] V →ₗ[R] HahnModule Γ₁ R (U ⊗[R] V) :=
   TensorProduct.uncurry _ _ _ _
   { toFun := fun x => {
@@ -460,7 +460,7 @@ def rightTensorMap {R} [CommSemiring R] [AddCommMonoid U] [Module R V] [Module R
 open TensorProduct in
 set_option backward.isDefEq.respectTransparency false in
 /-- The map that tensors a Hahn series with a module on the right. -/
-def leftTensorMap {R} [CommSemiring R] [AddCommMonoid U] [Module R V] [Module R U] :
+def leftTensorMap {R} [CommSemiring R] [Module R V] [Module R U] :
     U ⊗[R] HahnModule Γ₁ R V →ₗ[R] HahnModule Γ₁ R (U ⊗[R] V) :=
   TensorProduct.uncurry _ _ _ _
   { toFun := fun u => {
@@ -621,7 +621,7 @@ noncomputable def UnitSingle [Semiring R] {g : Γ} (hg : IsAddUnit g) {r : R} (h
   inv_val := by simp
 
 variable [PartialOrder Γ'] [AddCommMonoid Γ'] [IsOrderedCancelAddMonoid Γ'] [EquivLike F Γ Γ']
-[AddMonoidHomClass F Γ Γ'] [OrderIsoClass F Γ Γ']
+  [AddMonoidHomClass F Γ Γ'] [OrderIsoClass F Γ Γ']
 
 /-- A ring isomorphism on Hahn series induced by an additive order isomorphism. -/
 def equivDomainRingHom [NonAssocSemiring R] (f : F) :
@@ -710,8 +710,8 @@ end HahnSeries
 namespace HahnModule
 
 variable {Γ Γ' Γ₁ Γ₂ : Type*} [PartialOrder Γ] [PartialOrder Γ'] [PartialOrder Γ₁] [PartialOrder Γ₂]
-[VAdd Γ Γ₁] [IsOrderedCancelVAdd Γ Γ₁] [VAdd Γ' Γ₂] [IsOrderedCancelVAdd Γ' Γ₂] [MulZeroClass R]
-[AddCommMonoid V] [SMulWithZero R V]
+  [VAdd Γ Γ₁] [IsOrderedCancelVAdd Γ Γ₁] [VAdd Γ' Γ₂] [IsOrderedCancelVAdd Γ' Γ₂] [MulZeroClass R]
+  [AddCommMonoid V] [SMulWithZero R V]
 
 open Finset Function in
 theorem embDomain_smul (φ : Γ ↪o Γ') (f : Γ₁ ↪o Γ₂) (hf : ∀ (g : Γ) y, f (g +ᵥ y) = φ g +ᵥ f y)
@@ -1219,7 +1219,7 @@ section MVpowers
 
 
 variable [LinearOrder Γ] [AddCommMonoid Γ] [IsOrderedCancelAddMonoid Γ] [CommRing R] [CommRing V]
-[Algebra R V] {x : HahnSeries Γ V} (hx : 0 < x.orderTop)
+  [Algebra R V] {x : HahnSeries Γ V} (hx : 0 < x.orderTop)
 
 -- use Finsupp.sumFinsuppAddEquivProdFinsupp and maybe Finsupp.lsingle
 -- see also Finsupp.restrictSupportEquiv
@@ -1410,7 +1410,7 @@ namespace MvPowerSeries
 open HahnSeries SummableFamily
 
 variable [LinearOrder Γ] [AddCommMonoid Γ] [IsOrderedCancelAddMonoid Γ] [CommRing R] {σ : Type*}
-[Fintype σ] (y : σ →₀ HahnSeries Γ R) (hy : ∀ i, 0 < (y i).orderTop)
+  [Fintype σ] (y : σ →₀ HahnSeries Γ R) (hy : ∀ i, 0 < (y i).orderTop)
 /-!
 /-- The `R`-algebra homomorphism from `R[[X₁,…,Xₙ]]` to `HahnSeries Γ R` given by sending each power
 series variable `Xᵢ` to a positive order element. -/
@@ -1553,7 +1553,7 @@ namespace HahnSeries
 section BinomialPow
 
 variable (A : Type*) [LinearOrder Γ] [AddCommGroup Γ] [IsOrderedCancelAddMonoid Γ] [CommRing R]
-[BinomialRing R] [Module R Γ] [CommRing A] [Algebra R A]
+  [BinomialRing R] [Module R Γ] [CommRing A] [Algebra R A]
 
 theorem pos_orderTop_single_sub {g g' : Γ} (h : g < g') (a : A) :
     0 < (single (g' - g) a).orderTop := by

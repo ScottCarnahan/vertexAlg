@@ -14,7 +14,7 @@ Add to `Mathlib.Algebra.Lie.Basic`
 @[expose] public section
 
 variable {R L₁ L₂ : Type*} [CommRing R] [LieRing L₁] [LieAlgebra R L₁] [LieRing L₂]
-[LieAlgebra R L₂]
+  [LieAlgebra R L₂]
 
 instance : LinearEquivClass (L₁ ≃ₗ⁅R⁆ L₂) R L₁ L₂ where
   map_add f a b := by

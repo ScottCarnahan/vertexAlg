@@ -16,7 +16,7 @@ Add to `Mathlib.Algebra.Lie.Cochain`
 namespace LieModule.Cohomology
 
 variable (R L M : Type*) [CommRing R] [LieRing L] [LieAlgebra R L] [AddCommGroup M] [Module R M]
-[LieRingModule L M] [LieModule R L M]
+  [LieRingModule L M] [LieModule R L M]
 
 /-- A Lie 2-coboundary is a 2-cochain that lies in the image of the coboundary map. -/
 def twoCoboundary : Submodule R (twoCochain R L M) := LinearMap.range (d₁₂ R L M)

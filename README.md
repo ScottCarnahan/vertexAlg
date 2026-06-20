@@ -27,8 +27,8 @@ This is a repository for experimenting with vertex algebra API in lean4 + mathli
 
 ## TODO
 
- * Group theory: Golay-24 code, Mathieu₂₄, A₁^{24} Niemeier lattice, Leech lattice, Conway₁, show that the action of Conway₀ on Leech/2Leech is irreducible.
- * Vertex algebras: Dong's lemma, Jacobi identity for local fields, Vacuum representations, Lattice vertex algebras, -1 lattice orbifold, weight one Lie algebra action, worldsheet symmetry classes
+ * Group theory: Golay-24 code, Mathieu₂₄, A₁²⁴ Niemeier lattice, Leech lattice, Conway₁, show that the action of Conway₀ on Leech/2Leech is irreducible.
+ * Vertex algebras: Dong's lemma, Jacobi identity for local fields, Vacuum representations, invariant inner products, Lattice vertex algebras, -1-twisted module for lattices, -1 lattice orbifold, weight one Lie algebra action, worldsheet symmetry classes
  * Lie algebras: Positive energy representations, vertex operators attached to Lie algebra elements, generalized Kac-Moody Lie algebras, twisted denominator formula, virasoro representations, no-ghost theorem
  * Modular functions: Hauptmoduls, Hecke-monic functions and replicability
  * Power series: clean up binomial series, better API for passing between Hahn series and coefficients

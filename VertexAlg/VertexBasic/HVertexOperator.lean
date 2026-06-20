@@ -158,9 +158,9 @@ theorem lexRevEquivBase_symm_apply_apply_coeff (Γ Γ₂) [PartialOrder Γ] [Par
 -/
 
 variable {Γ' Γ₁' F : Type*} [PartialOrder Γ'] [AddCommMonoid Γ'] [IsOrderedCancelAddMonoid Γ']
-[PartialOrder Γ₁'] [AddAction Γ' Γ₁'] [IsOrderedCancelVAdd Γ' Γ₁'] [EquivLike S Γ Γ']
-[AddMonoidHomClass S Γ Γ'] [OrderIsoClass S Γ Γ'] (f : S) [EquivLike F Γ₁ Γ₁']
-[OrderIsoClass F Γ₁ Γ₁'] [AddActionSemiHomClass F f Γ₁ Γ₁'] (f₁ : F)
+  [PartialOrder Γ₁'] [AddAction Γ' Γ₁'] [IsOrderedCancelVAdd Γ' Γ₁'] [EquivLike S Γ Γ']
+  [AddMonoidHomClass S Γ Γ'] [OrderIsoClass S Γ Γ'] (f : S) [EquivLike F Γ₁ Γ₁']
+  [OrderIsoClass F Γ₁ Γ₁'] [AddActionSemiHomClass F f Γ₁ Γ₁'] (f₁ : F)
 
 open scoped HahnModule
 
@@ -474,9 +474,9 @@ namespace HVertexOperator
 section binomialPow
 
 variable [LinearOrder Γ] [AddCommGroup Γ] [IsOrderedAddMonoid Γ] [CommRing R] [CommRing S]
-[BinomialRing S] [Module S Γ] [AddCommGroup V] [Module R V] [AddCommGroup W] [Module R W]
-[PartialOrder Γ₁] [AddAction Γ Γ₁] [IsOrderedCancelVAdd Γ Γ₁] [Module S W] [Algebra S R]
-[IsScalarTower S R W]
+  [BinomialRing S] [Module S Γ] [AddCommGroup V] [Module R V] [AddCommGroup W] [Module R W]
+  [PartialOrder Γ₁] [AddAction Γ Γ₁] [IsOrderedCancelVAdd Γ Γ₁] [Module S W] [Algebra S R]
+  [IsScalarTower S R W]
 
 omit [BinomialRing S] [Module S W] [Algebra S R] in
 theorem exists_binomialPow_smul_support_bound {g g' : Γ} (g₁ : Γ₁) (h : g < g') (n : S)
@@ -574,8 +574,8 @@ end HVertexOperator
 section HStateField
 
 variable (Γ R U₀ U₁ U₂ V W : Type*) [CommRing R] [AddCommGroup U₀] [Module R U₀] [AddCommGroup U₁]
-[Module R U₁] [AddCommGroup U₂] [Module R U₂] [AddCommGroup V] [Module R V] [AddCommGroup W]
-[Module R W]
+  [Module R U₁] [AddCommGroup U₂] [Module R U₂] [AddCommGroup V] [Module R V] [AddCommGroup W]
+  [Module R W]
 
 /-- A heterogeneous state-field map is a linear map from a vector space `U` to the space of
 heterogeneous fields (or vertex operators) from `V` to `W`.  Equivalently, it is a bilinear map
@@ -589,9 +589,9 @@ namespace HStateField
 section
 
 variable {Γ' Γ₁ Γ₁' : Type*} [PartialOrder Γ] [AddCommMonoid Γ] [IsOrderedCancelAddMonoid Γ]
-[PartialOrder Γ'] [AddCommMonoid Γ'] [IsOrderedCancelAddMonoid Γ']
-[PartialOrder Γ₁] [AddAction Γ Γ₁] [IsOrderedCancelVAdd Γ Γ₁] [PartialOrder Γ₁'] [AddAction Γ' Γ₁']
-[IsOrderedCancelVAdd Γ' Γ₁'] (f : Γ ≃+o Γ') --(f₁ : OrderedAddActionEquiv f.toEquiv Γ₁ Γ₁')
+  [PartialOrder Γ'] [AddCommMonoid Γ'] [IsOrderedCancelAddMonoid Γ'] [PartialOrder Γ₁]
+  [AddAction Γ Γ₁] [IsOrderedCancelVAdd Γ Γ₁] [PartialOrder Γ₁'] [AddAction Γ' Γ₁']
+  [IsOrderedCancelVAdd Γ' Γ₁'] (f : Γ ≃+o Γ') --(f₁ : OrderedAddActionEquiv f.toEquiv Γ₁ Γ₁')
 
 open scoped HahnModule
 /-!
@@ -744,7 +744,7 @@ section Composition
 -/
 
 variable [PartialOrder Γ] [PartialOrder Γ₁] [AddCommGroup U] [Module R U] [AddCommGroup X]
-[Module R X] [AddCommGroup Y] [Module R Y]
+  [Module R X] [AddCommGroup Y] [Module R Y]
 
 /-- Left iterated vertex operator. -/
 def leftTensorComp (A : HVertexOperator Γ R (U ⊗[R] V) X)

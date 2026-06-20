@@ -112,7 +112,7 @@ export OrderedMulActionSemiEquivClass (map_smulₛₗ)
 export OrderedAddActionSemiEquivClass (map_vaddₛₗ)
 
 @[to_additive]
-instance (F : Type*) [SMul M X] [SMul N Y] [EquivLike F X Y] [OrderIsoClass F X Y]
+instance (F : Type*) [EquivLike F X Y] [OrderIsoClass F X Y]
     [OrderedMulActionSemiEquivClass F φ X Y] : MulActionSemiHomClass F φ X Y where
   map_smulₛₗ := OrderedMulActionSemiEquivClass.map_smulₛₗ
 
@@ -156,7 +156,7 @@ namespace Prod.Lex
 variable {G G₁ P₁ P₂ : Type*}
 
 @[to_additive]
-instance [SMul G P₁] [SMul G₁ P₂] : SMul (G ×ₗ G₁) (P₁ ×ₗ P₂) where
+instance instSMulLex [SMul G P₁] [SMul G₁ P₂] : SMul (G ×ₗ G₁) (P₁ ×ₗ P₂) where
   smul g h := toLex ((ofLex g).1 • (ofLex h).1, (ofLex g).2 • (ofLex h).2)
 
 @[to_additive]
@@ -165,29 +165,41 @@ theorem smul_eq [SMul G P₁] [SMul G₁ P₂] (g : G ×ₗ G₁) (h : P₁ ×�
   rfl
 
 @[to_additive]
-instance [Monoid G] [Monoid G₁] [MulAction G P₁] [MulAction G₁ P₂] :
+instance instMulActionLex [Monoid G] [Monoid G₁] [MulAction G P₁] [MulAction G₁ P₂] :
     MulAction (G ×ₗ G₁) (P₁ ×ₗ P₂) where
   one_smul x := by simp [smul_eq]
   mul_smul x y z := by simp [smul_eq, mul_smul]
 
 @[to_additive]
-instance [PartialOrder G] [PartialOrder G₁] [PartialOrder P₁] [SMul G P₁]
+instance instIsOrderedCancelSMulLex [PartialOrder G] [PartialOrder G₁] [PartialOrder P₁] [SMul G P₁]
     [IsOrderedCancelSMul G P₁] [PartialOrder P₂] [SMul G₁ P₂] [IsOrderedCancelSMul G₁ P₂] :
     IsOrderedCancelSMul (G ×ₗ G₁) (P₁ ×ₗ P₂) where
   smul_le_smul_left a b h c := by
+    have hc (x : Lex (P₁ × P₂)) : (ofLex c).1 • (ofLex x).1 = (ofLex (c • x)).1 := by
+        simp only [ofLex_smul]
+        rfl
     obtain h₁ | ⟨h₂, h₃⟩ := Prod.Lex.le_iff.mp h
-    · exact Prod.Lex.le_iff.mpr <| Or.inl <|
-        by simpa using (SMul.smul_lt_smul_of_le_of_lt (Preorder.le_refl (ofLex c).1) h₁)
+    · have := SMul.smul_lt_smul_of_le_of_lt (Preorder.le_refl (ofLex c).1) h₁
+      exact Prod.Lex.le_iff.mpr <| Or.inl <| by rwa [← hc, ← hc]
     · refine Prod.Lex.le_iff.mpr <| Or.inr <| ⟨?_, ?_⟩
-      · simpa using (congrArg (HSMul.hSMul (ofLex c).1) h₂)
-      · simpa using (IsOrderedSMul.smul_le_smul_left (ofLex a).2 (ofLex b).2 h₃ (ofLex c).2)
+      · have := (congrArg (HSMul.hSMul (ofLex c).1) h₂)
+        rwa [← hc]
+      · have := (IsOrderedSMul.smul_le_smul_left (ofLex a).2 (ofLex b).2 h₃ (ofLex c).2)
+        simp only [ofLex_smul, ge_iff_le]
+        exact this
   smul_le_smul_right a b h c := by
+    have hc (a : Lex (G × G₁)) : (ofLex a).1 • (ofLex c).1 = (ofLex (a • c)).1 := by
+        simp only [ofLex_smul]
+        rfl
     obtain h₁ | ⟨h₂, h₃⟩ := Prod.Lex.le_iff.mp h
-    · exact Prod.Lex.le_iff.mpr <| Or.inl <|
-        by simpa using (SMul.smul_lt_smul_of_lt_of_le h₁ (Preorder.le_refl (ofLex c).1))
+    · exact Prod.Lex.le_iff.mpr <| Or.inl <| by
+        have := SMul.smul_lt_smul_of_lt_of_le h₁ (Preorder.le_refl (ofLex c).1)
+        rwa [← hc]
     · refine Prod.Lex.le_iff.mpr <| Or.inr <| ⟨?_, ?_⟩
-      · simpa using congrFun (congrArg HSMul.hSMul h₂) (ofLex c).1
-      · simpa using (IsOrderedSMul.smul_le_smul_right (ofLex a).2 (ofLex b).2 h₃ (ofLex c).2)
+      · have := congrFun (congrArg HSMul.hSMul h₂) (ofLex c).1
+        rwa [← hc]
+      · have := IsOrderedSMul.smul_le_smul_right (ofLex a).2 (ofLex b).2 h₃ (ofLex c).2
+        simpa [← hc]
   le_of_smul_le_smul_left a b c h := by
     obtain h₁ | ⟨h₂, h₃⟩ := Prod.Lex.le_iff.mp h
     · exact Prod.Lex.le_iff.mpr <| Or.inl <| SMul.lt_of_smul_lt_smul_left h₁
@@ -224,21 +236,27 @@ instance [PartialOrder G] [PartialOrder G₁] [PartialOrder P₁] [SMul G P₁]
     [IsOrderedCancelSMul G P₁] [PartialOrder P₂] [SMul G₁ P₂] [IsOrderedCancelSMul G₁ P₂] :
     IsOrderedCancelSMul (G ×ᵣ G₁) (P₁ ×ᵣ P₂) where
   smul_le_smul_left a b h c := by
+    have hc (a : RevLex (P₁ × P₂)): (ofRevLex c).2 • (ofRevLex a).2 = (ofRevLex (c • a)).2 := rfl
     obtain h₁ | ⟨h₂, h₃⟩ := Prod.RevLex.le_iff.mp h
-    · refine Prod.RevLex.le_iff.mpr <| Or.inl <| by simpa using (SMul.smul_lt_smul_of_le_of_lt
-        (Preorder.le_refl (ofRevLex c).2) h₁)
+    · refine Prod.RevLex.le_iff.mpr <| Or.inl <| by
+        have := (SMul.smul_lt_smul_of_le_of_lt (Preorder.le_refl (ofRevLex c).2) h₁)
+        rwa [← hc]
     · refine Prod.RevLex.le_iff.mpr <| Or.inr <| ⟨?_, ?_⟩
-      · simpa using (congrArg (HSMul.hSMul (ofRevLex c).2) h₂)
-      · simpa using (IsOrderedSMul.smul_le_smul_left
-          (ofRevLex a).1 (ofRevLex b).1 h₃ (ofRevLex c).1)
+      · have := (congrArg (HSMul.hSMul (ofRevLex c).2) h₂)
+        rwa [← hc]
+      · have := (IsOrderedSMul.smul_le_smul_left (ofRevLex a).1 (ofRevLex b).1 h₃ (ofRevLex c).1)
+        simpa [← hc]
   smul_le_smul_right a b h c := by
+    have hc (a : RevLex (G × G₁)): (ofRevLex a).2 • (ofRevLex c).2 = (ofRevLex (a • c)).2 := rfl
     obtain h₁ | ⟨h₂, h₃⟩ := Prod.RevLex.le_iff.mp h
-    · exact Prod.RevLex.le_iff.mpr <| Or.inl <|
-        by simpa using (SMul.smul_lt_smul_of_lt_of_le h₁ (Preorder.le_refl (ofRevLex c).2))
+    · exact Prod.RevLex.le_iff.mpr <| Or.inl <| by
+        have := (SMul.smul_lt_smul_of_lt_of_le h₁ (Preorder.le_refl (ofRevLex c).2))
+        rwa [← hc]
     · refine Prod.RevLex.le_iff.mpr <| Or.inr <| ⟨?_, ?_⟩
-      · simpa using congrFun (congrArg HSMul.hSMul h₂) (ofRevLex c).2
-      · simpa using (IsOrderedSMul.smul_le_smul_right
-          (ofRevLex a).1 (ofRevLex b).1 h₃ (ofRevLex c).1)
+      · have := congrFun (congrArg HSMul.hSMul h₂) (ofRevLex c).2
+        rwa [← hc]
+      · have := (IsOrderedSMul.smul_le_smul_right (ofRevLex a).1 (ofRevLex b).1 h₃ (ofRevLex c).1)
+        simpa [← hc]
   le_of_smul_le_smul_left a b c h := by
     obtain h₁ | ⟨h₂, h₃⟩ := Prod.RevLex.le_iff.mp h
     · exact Prod.RevLex.le_iff.mpr <| Or.inl <| SMul.lt_of_smul_lt_smul_left h₁

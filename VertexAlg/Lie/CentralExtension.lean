@@ -100,7 +100,7 @@ section ofTwoCocycle
 open LieModule.Cohomology
 
 variable [LieRing M] [LieAlgebra R M] [LieRing N] [LieAlgebra R N] [LieRingModule M N]
-[LieModule R M N] (h : IsLieAbelian N) (c : twoCocycle R M N)
+  [LieModule R M N] (h : IsLieAbelian N) (c : twoCocycle R M N)
 
 /-- The Lie algebra map inclusion of a central extension derived from a 2-cocycle. -/
 @[simps]
@@ -209,7 +209,7 @@ section TwoCocycle
 open LieModule.Cohomology
 
 variable [LieRing N] [LieAlgebra R N] [LieRing M] [LieAlgebra R M] (E : Extension R N M)
-[LieRingModule M N] [LieModule R M N] [LieModule.IsTrivial M N]
+  [LieRingModule M N] [LieModule R M N] [LieModule.IsTrivial M N]
     (hE : E.IsCentral) {s : M →ₗ[R] E.L}
     (hs : Function.LeftInverse E.proj s) (p : E.L →ₗ[R] N)
 
@@ -281,11 +281,11 @@ lemma twoCocycleOfSplitting_ofTwoCocycle (h : IsLieAbelian N) (c : twoCocycle R 
     twoCochain_val_apply, bracket_sectionTwoCocycleRight h c]
   simp
 
-lemma bracket_of_splitting (hp : Function.LeftInverse p E.incl) (x y : M) :
+lemma bracket_of_splitting (x y : M) :
     ⁅s x, s y⁆ = s ⁅x, y⁆ + E.incl ((E.twoCocycleOfSplitting hE hs).val x y) := by
-  refine E.eq_of_proj_eq ?_ hp ?_
-  · rw [incl_twoCocycleOfSplitting_apply, map_add, map_sub]
-    abel
+  refine E.eq_of_proj_eq hs ?_ ?_
+  · rw [incl_twoCocycleOfSplitting_apply]
+    abel_nf
   · rw [incl_twoCocycleOfSplitting_apply, map_add, map_sub]
     abel
 

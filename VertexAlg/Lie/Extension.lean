@@ -23,7 +23,7 @@ variable {L M N R : Type*}
 section
 
 variable [CommRing R] [LieRing L] [LieAlgebra R L] [LieRing M] [LieAlgebra R M] [LieRing N]
-[LieAlgebra R N]
+  [LieAlgebra R N]
 
 lemma IsExtension.range_eq_ker (i : N →ₗ⁅R⁆ L) (p : L →ₗ⁅R⁆ M) (h : IsExtension i p) :
     LinearMap.range i.toLinearMap = p.ker := by
@@ -42,7 +42,7 @@ section
 open LieModule.Cohomology
 
 variable [CommRing R] [LieRing L] [LieAlgebra R L] [AddCommGroup M] [Module R M] [LieRingModule L M]
-[LieModule R L M] (c : twoCocycle R L M)
+  [LieModule R L M] (c : twoCocycle R L M)
 
 @[simp] lemma of_sub (x y : L × M) : ofProd c (x - y) = ofProd c x - ofProd c y := rfl
 
@@ -297,7 +297,7 @@ open LieModule.Cohomology
 variable [CommRing R] [LieRing L] [LieAlgebra R L]
 
 variable [AddCommGroup M] [Module R M] [LieRingModule L M] [LieModule R L M]
-(c : twoCocycle R L M)
+  (c : twoCocycle R L M)
 
 /-- The Lie algebra map from a central extension derived from a 2-cocycle. -/
 @[simps]
@@ -320,7 +320,7 @@ section ofTwoCocycle
 open LieModule.Cohomology
 
 variable [CommRing R] [LieRing L] [LieAlgebra R L] [LieRing M] [LieAlgebra R M] [IsLieAbelian M]
-[LieRingModule L M] [LieModule R L M] (c : twoCocycle R L M)
+  [LieRingModule L M] [LieModule R L M] (c : twoCocycle R L M)
 
 lemma bracket_ofTwoCocycle (x y : (ofTwoCocycle c).L) :
     ⁅x, y⁆ = ofAlg c ⁅(ofAlg c).symm x, (ofAlg c).symm y⁆ := rfl
