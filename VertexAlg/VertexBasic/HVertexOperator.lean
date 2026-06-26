@@ -233,6 +233,51 @@ section CoeffOps
 
 variable [CommRing R] {V W : Type*} [AddCommGroup V] [Module R V] [AddCommGroup W] [Module R W]
 
+
+/- (2026-06-24) The hard part is applying 2-variable locality to situations where I have 3
+variables in play. I need a way to say that a high enough power of `X i - X j` equalizes
+`A(X i) B(X j)` and `B(X j) A(X i)` inside any product of vertex operators.
+
+I should have a coeff-along-group-isom function to remove orderings on groups, and assign
+A to X₁, B to X₂, C to X₃.  Also, need something
+
+-/
+
+@[simps]
+def ofLex2 : ℤ ×ₗ ℤ ≃+ (Fin 2 → ℤ) where
+  toFun a n := if n = 0 then (ofLex a).1 else (ofLex a).2
+  invFun f := toLex (f 0, f 1)
+  map_add' a b := by
+    ext n
+    by_cases h : n = 0 <;> simp [h]
+  right_inv f := by
+    ext n
+    by_cases h : n = 0
+    · simp [h]
+    · simp [show n = 1 by lia]
+
+@[simps]
+def ofLex3 : (ℤ ×ₗ (ℤ ×ₗ ℤ)) ≃+ (Fin 3 → ℤ) where
+  toFun a n := if n = 0 then (ofLex a).1 else
+    if n = 1 then (ofLex (ofLex a).2).1 else (ofLex (ofLex a).2).2
+  invFun f := toLex (f 0, toLex (f 1, f 2))
+  map_add' a b := by
+    ext n
+    by_cases h₀ : n = 0
+    · simp [h₀]
+    · by_cases h₁ : n = 1
+      · simp [h₁]
+      · simp [h₀, h₁]
+  right_inv f := by
+    ext n
+    by_cases h₀ : n = 0
+    · simp [h₀]
+    · by_cases h₁ : n = 1
+      · simp [h₁]
+      · simp [show n = 2 by lia]
+
+
+
 /-- Swap inputs for a function on a product. -/
 @[simps!]
 def swapEquiv : ((Γ₁ × Γ) → V) ≃ₗ[R] ((Γ × Γ₁) → V) where
