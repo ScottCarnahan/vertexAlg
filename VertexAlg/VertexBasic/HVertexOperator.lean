@@ -6,8 +6,6 @@ Authors: Scott Carnahan
 module
 
 public import Mathlib.Algebra.Vertex.HVertexOperator
-public import Mathlib.Algebra.Order.Monoid.Prod
-public import Mathlib.RingTheory.HahnSeries.Binomial
 public import VertexAlg.HahnSeries
 
 /-!
@@ -243,8 +241,101 @@ A to X₁, B to X₂, C to X₃.  Also, need something
 
 -/
 
+/-- Embed the space of maps to a vector space into the space of maps from a `ι`-fold product along
+one coordinate. -/
 @[simps]
-def ofLex2 : ℤ ×ₗ ℤ ≃+ (Fin 2 → ℤ) where
+noncomputable def emb {ι : Type*} {Γ : ι → Type*} [∀ i, Zero (Γ i)] (i : ι) :
+    (Γ i → V) →ₗ[R] ((Π i, Γ i) → V) where
+  toFun A f :=
+    letI := Classical.propDecidable (∀ (k : ι), k ≠ i → f k = 0)
+    if ∀ k, k ≠ i → f k = 0 then A (f i) else 0
+  map_add' _ _ := by
+    ext f
+    by_cases h : ∀ j, ¬j = i → f j = 0
+    · simp_all
+    · simp [h]
+  map_smul' _ _ := by ext; simp
+
+/-- A linear map from the space of maps from a lex product into a space of maps from a `ι`-fold
+product. This is an embedding when `i ≠ j`. -/
+@[simps]
+noncomputable def emb2 {ι : Type*} {Γ : ι → Type*} [∀ i, Zero (Γ i)] (i j : ι) :
+    ((Γ i ×ₗ Γ j) → V) →ₗ[R] ((Π i, Γ i) → V) where
+  toFun A f :=
+    letI := Classical.propDecidable (∀ (k : ι), k ≠ i → k ≠ j → f k = 0)
+    if ∀ k, k ≠ i → k ≠ j → f k = 0 then A (toLex (f i, f j)) else 0
+  map_add' _ _ := by
+    ext f
+    by_cases h : ∀ (k : ι), k ≠ i → k ≠ j → f k = 0
+    · simp_all
+    · simp [h]
+  map_smul' _ _ := by ext; simp
+
+/-- The set of dependent maps `(Π i, Γ i) → V` that are supported in `Π i ∈ s, Γ i` -/
+@[simps]
+def supportMapSpace {ι : Type*} (Γ : ι → Type*) [∀ i, Zero (Γ i)] (s : Set ι) (V) [AddCommGroup V]
+    [Module R V] :
+    Submodule R ((Π i, Γ i) → V) where
+  carrier := {f : (Π i, Γ i) → V | ∀ g : (Π i, Γ i), (∃ i, i ∉ s ∧ g i ≠ 0) → f g = 0}
+  add_mem' h1 h2 g hg := by rw [Pi.add_apply, h1 g hg, h2 g hg, zero_add]
+  zero_mem' := by simp
+  smul_mem' c {_} h := by
+    simp only [forall_exists_index] at ⊢ h
+    intro g i hi
+    simp [h g i hi]
+
+/-- Apply a heterogeneous vertex operator to a formal power series whose support is orthogonal to
+the coordinate of the operator. Rather than assume the support is orthogonal (i.e., that `i ∉ s`),
+we simply ignore terms with nonzero `i`th coordinate. -/
+noncomputable def applyPi {ι : Type*} [DecidableEq ι] {Γ : ι → Type*} [∀ i, Zero (Γ i)] (s : Set ι)
+    (i : ι) [PartialOrder (Γ i)] (A : HVertexOperator (Γ i) R V W) :
+    ((Π i, Γ i) → V) →ₗ[R]
+      supportMapSpace (R := R) (V := W) Γ (insert i s) where
+  toFun x :=
+    letI _ (y : (i : ι) → Γ i) := Classical.propDecidable (∃ j, (¬j = i ∧ j ∉ s) ∧ ¬y j = 0)
+    ⟨fun g ↦ if ∃ j, (¬j = i ∧ j ∉ s) ∧ ¬g j = 0 then 0 else
+      A.coeff (g i) (x (Function.update g i 0)), by
+      simp only [supportMapSpace, Set.mem_insert_iff, not_or, forall_exists_index, and_imp,
+        Submodule.mem_mk, AddSubmonoid.mem_mk, AddSubsemigroup.mem_mk,
+        Set.mem_setOf_eq, ite_eq_left_iff, not_exists, not_and, not_not]
+      intro y j hj h2 hy h
+      exact (hy (h j hj h2)).elim⟩
+  map_add' x y := by
+    ext g
+    by_cases h : ∃ j, (¬j = i ∧ j ∉ s) ∧ ¬g j = 0 <;>
+    · simp only [Submodule.coe_add, Pi.add_apply, h]
+      simp
+  map_smul' r x := by ext; simp
+
+lemma applyPi_apply_coe {ι : Type*} [DecidableEq ι] {Γ : ι → Type*} [∀ i, Zero (Γ i)] (s : Set ι)
+    (i : ι) [PartialOrder (Γ i)] (A : HVertexOperator (Γ i) R V W) (x : (Π i, Γ i) → V)
+    (g : (i : ι) → Γ i) :
+    letI _ (g : (i : ι) → Γ i) := Classical.propDecidable (∃ j, (¬j = i ∧ j ∉ s) ∧ ¬g j = 0)
+    ((applyPi s i A) x : (Π i, Γ i) → W) g = if ∃ j, (¬j = i ∧ j ∉ s) ∧ ¬g j = 0 then 0 else
+      (coeff A (g i)) ((x : (Π i, Γ i) → V) (Function.update g i 0)) :=
+  rfl
+
+@[simp]
+lemma applyPi_coeff_of_exists {ι : Type*} [DecidableEq ι] {Γ : ι → Type*} [∀ i, Zero (Γ i)]
+    (s : Set ι) (i : ι) [PartialOrder (Γ i)] (A : HVertexOperator (Γ i) R V W)
+    (x : (Π i, Γ i) → V) (g : (i : ι) → Γ i) (hg : ∃ j, (¬j = i ∧ j ∉ s) ∧ ¬g j = 0) :
+    (A.applyPi s i x : (Π i, Γ i) → W) g = 0 := by
+  simp [applyPi_apply_coe, hg]
+
+@[simp]
+lemma applyPi_coeff_of_forall {ι : Type*} [DecidableEq ι] {Γ : ι → Type*} [∀ i, Zero (Γ i)]
+    (s : Set ι) (i : ι) [PartialOrder (Γ i)] (A : HVertexOperator (Γ i) R V W)
+    (x : (Π i, Γ i) → V) (g : (i : ι) → Γ i) (hg : ∀ j, j ∉ insert i s → g j = 0) :
+    (A.applyPi s i x : (Π i, Γ i) → W) g =
+      A.coeff (g i) ((x : (Π i, Γ i) → V) (Function.update g i 0)) := by
+  simp only [applyPi_apply_coe]
+  exact if_neg <| not_exists.mpr fun j ↦ by simpa using hg j
+
+
+
+/-- An additive equiv from Lex product to maps from `Fin 2`. -/
+@[simps]
+def ofLex2' : ℤ ×ₗ ℤ ≃+ (Fin 2 → ℤ) where
   toFun a n := if n = 0 then (ofLex a).1 else (ofLex a).2
   invFun f := toLex (f 0, f 1)
   map_add' a b := by
@@ -256,6 +347,20 @@ def ofLex2 : ℤ ×ₗ ℤ ≃+ (Fin 2 → ℤ) where
     · simp [h]
     · simp [show n = 1 by lia]
 
+/-- A homomorphism from the lex product of ℤ to a rank n free abelian group. -/
+@[simps]
+def ofLex2 (n : ℕ) (i j : Fin n) : ℤ ×ₗ ℤ →+ (Fin n → ℤ) where
+  toFun a k := if k = i then (ofLex a).1 else if k = j then (ofLex a).2 else 0
+  map_zero' := by ext; simp
+  map_add' a b := by
+    ext k
+    by_cases hi : k = i
+    · simp [hi]
+    · by_cases hj : k = j
+      · simp [hj, show j ≠ i by grind]
+      · simp [hi, hj]
+
+/-- An additive equiv from a 3-fold Lex product to maps from `Fin 3`. -/
 @[simps]
 def ofLex3 : (ℤ ×ₗ (ℤ ×ₗ ℤ)) ≃+ (Fin 3 → ℤ) where
   toFun a n := if n = 0 then (ofLex a).1 else
@@ -310,8 +415,6 @@ def assocEquiv : ((Γ × Γ₁) × Γ₂ → V →ₗ[R] W) ≃ₗ[R] (Γ × (Γ
   invFun A g := A (g.1.1, (g.1.2, g.2))
   left_inv A := by simp
   right_inv A := by simp
-
--- scalar action by finsupps.
 
 end CoeffOps
 
@@ -384,7 +487,7 @@ theorem revLexComp_apply_apply_apply_coeff (A : HVertexOperator Γ R V W)
 factor, as a linear map. -/
 def LexResLeft (g' : Γ₁) : HVertexOperator (Γ₁ ×ₗ Γ) R V W →ₗ[R] HVertexOperator Γ R V W where
   toFun A := HVertexOperator.of_coeff (fun g => coeff A (toLex (g', g)))
-    (fun v => Set.PartiallyWellOrderedOn.fiberProdLex (A v).isPWO_support' _)
+    (fun v => Set.PartiallyWellOrderedOn.fiberProdLex (A v).isPWO_support' g')
   map_add' _ _ := rfl
   map_smul' _ _ := rfl
 

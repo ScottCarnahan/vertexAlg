@@ -5,6 +5,7 @@ Authors: Scott Carnahan
 -/
 module
 
+public import Mathlib.Algebra.Order.Monoid.Prod
 public import Mathlib.Algebra.Vertex.VertexOperator
 public import Mathlib.RingTheory.LaurentSeries
 public import VertexAlg.VertexBasic.HVertexOperator
@@ -43,7 +44,7 @@ open HVertexOperator
 
 variable [CommRing R] [AddCommGroup V] [Module R V]
 
-noncomputable instance : One (VertexOperator R V) :=
+noncomputable instance instOne : One (VertexOperator R V) :=
   ⟨(HahnModule.lof R (Γ := ℤ) (V := V)) ∘ₗ HahnSeries.single.linearMap (0 : ℤ)⟩
 
 @[simp]
@@ -169,8 +170,9 @@ noncomputable def unitSub {σ : Type*} [LinearOrder σ] {i j : σ} : HahnSeries 
 
 /-!
 (2025-7-29) Use Finsupp.
-For weak associativity, use Y(Y(a,x)b,y)c, multiply by a suitable power of xy(x-y), compare
-to Y(a,x)Y(b,y)c, after multiplying by a suitable power of xy(x-y) and a substitution.
+For weak associativity, we want to say that `Y(a,x)Y(b,y)c = Y(Y(a,x-y)b,y)c`, so use
+`Y(Y(a,x)b,y)c`, multiply by a suitable power of `xy(x+y)`, compare to `Y(a,x)Y(b,y)c`, after
+multiplying by a suitable power of `xy(x-y)` followed by a substitution `x ↦ x + y`.
 (old)
 Given a totally ordered fintype `σ`, we consider binomials in `HahnSeries (PiLex σ Z) R`.
 Define binomials `X i - X j` as `varMinus hij` for `hij : i < j`.
@@ -285,6 +287,16 @@ should allow me to commute in all domains with a fixed embedding of `ℤ × ℤ`
 "equality" of formal functions after variable switch (= isomorphism of exponent groups)
 isom of exponent groups induces corresponding equality of coeff functions.
 How do I express weak associativity in terms of power series? This seems to require a substitution.
+
+2026-06-26
+Compose coeff with coordinate embeddings `ℤ → (Fin n → ℤ)`. or `ι → ℤ`
+Then, use `MonoidAlgebra` smul to describe locality.
+Say `A` and `B` are local of order at most `n` if for any `i ≠ j`,
+`(X i - X j) ^ n • (emb i A.coeff ∘ emb j B.coeff) =`
+`(X i - X j) ^ n • (emb j B.coeff ∘ emb i A.coeff)`
+`MvPolynomial` allows for `i` in `Fin n`.
+To get an operator out of `emb i A.coeff`, we need to start with formal series whose support in
+`Fin n → ℤ` projects to `0` in the `i` coordinate.
 -/
 variable {R V : Type*} [CommRing R] [AddCommGroup V] [Module R V] (A B : VertexOperator R V)
 
