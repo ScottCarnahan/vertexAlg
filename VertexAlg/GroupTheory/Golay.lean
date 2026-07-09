@@ -8,6 +8,7 @@ module
 public import Mathlib.LinearAlgebra.Matrix.GeneralLinearGroup.FinTwo
 public import Mathlib.LinearAlgebra.Projectivization.Action
 public import Mathlib.LinearAlgebra.Projectivization.Cardinality
+public import Mathlib.LinearAlgebra.Projectivization.Subspace
 public import Mathlib.Algebra.Algebra.ZMod
 public import Mathlib.FieldTheory.Finite.Basic
 
@@ -35,9 +36,72 @@ binary code, golay code
 
 namespace Projectivization
 
-variable {K : Type*} [Field K]
+variable {K V : Type*} [Field K] [AddCommGroup V] [Module K V]
 
 open scoped LinearAlgebra.Projectivization
+
+/-- (delete this?) The hyperplane given by a nonzero dual vector.
+If the vector is zero, we get the whole space. -/
+def hyperplaneOf (x : V →ₗ[K] K) := x.ker.projectivization
+
+/-- Given a dual vector, embed the preimage of 1 into projective space. When the dual vector is
+zero, this is the embedding of the empty set. -/
+def complement (x : V →ₗ[K] K) : x⁻¹' {1} ↪ ℙ K V where
+  toFun y := Projectivization.mk K y.1 (fun hy ↦ by simpa [hy] using y.2)
+  inj' a b h := by
+    obtain ⟨a, _⟩ := a
+    obtain ⟨b, _⟩ := b
+    have ha : x a = 1 := by simpa
+    have hb : x b = 1 := by simpa
+    obtain ⟨c, hc⟩ :=
+      (mk_eq_mk_iff' K a b (fun h ↦ by simp [h] at ha) (fun h ↦ by simp [h] at hb)).mp h
+    rw [← hc, map_smul, hb, smul_eq_mul, mul_one] at ha
+    simpa [ha] using hc.symm
+
+lemma mem_submodule_iff_span_eq {x : V} (hx : x ≠ 0) {y : ℙ K V} :
+    x ∈ y.submodule ↔ Submodule.span K {x} = y.submodule := by
+  rw [← Submodule.mk_mem_projectivization_iff y.submodule hx,
+    Submodule.mem_projectivization_iff_submodule_le, submodule_mk]
+  refine ⟨fun h ↦ ?_, fun h ↦ le_of_eq_of_le h fun _ a ↦ a⟩
+  exact Submodule.eq_of_le_of_finrank_eq h (by rw [finrank_span_singleton hx, finrank_submodule])
+
+lemma mem_submodule_iff {x : V} (hx : x ≠ 0) {y : ℙ K V} : x ∈ y.submodule ↔ mk K x hx = y := by
+  rw [mem_submodule_iff_span_eq hx]
+  refine ⟨fun h ↦ ?_, fun h ↦ by simp [← h]⟩
+  rw [← mk_rep y, mk_eq_mk_iff']
+  rw [submodule_eq, Submodule.span_singleton_eq_span_singleton] at h
+  obtain ⟨a, ha⟩ := h
+  use a.inv
+  simp [← ha, Units.smul_def]
+
+lemma mem_ker_projectivization_or_mem_complement_range (x : V →ₗ[K] K) (y : ℙ K V) :
+    y ∈ x.ker.projectivization ∨ y ∈ (Set.range (complement x)) := by
+  by_cases h : y.submodule ≤ x.ker
+  · left
+    exact (Submodule.mem_projectivization_iff_submodule_le x.ker y).mpr h
+  · right
+    obtain ⟨z, hz1, hz2⟩ := SetLike.not_le_iff_exists.mp h
+    let c : Units K := Units.mk0 (x z) hz2
+    use ⟨c.inv • z, by rw [Set.mem_preimage, Set.mem_singleton_iff, map_smul, smul_eq_mul,
+      Units.inv_eq_val_inv, Units.inv_mul_of_eq (by rfl)]⟩
+    have : c.inv • z ∈ y.submodule := SMulMemClass.smul_mem c.inv hz1
+    simp only [complement, Function.Embedding.coeFn_mk]
+    simp only [Units.inv_eq_val_inv, Units.val_inv_eq_inv_val, Units.val_mk0, c] at this ⊢
+    rwa [← mem_submodule_iff]
+
+lemma notMem_range_complement (x : V →ₗ[K] K) (y : ℙ K V) (hy : y ∈ x.ker.projectivization) :
+    y ∉ (Set.range (complement x)) := by
+  rw [Submodule.mem_projectivization_iff_submodule_le] at hy
+  rw [Set.mem_range, not_exists]
+  intro z h
+  simp only [complement, Function.Embedding.coeFn_mk] at h
+  obtain ⟨z, hz⟩ := z
+  have hxz : x z = 1 := hz
+  have hx := LinearMap.mem_ker.mp (hy ((mem_submodule_iff y.rep_nonzero).mpr (mk_rep y)))
+  have : x (mk K z (fun h0 ↦ by simp [h0] at hxz)).rep = 0 := by rw [h, hx]
+  obtain ⟨c, hc⟩ := exists_smul_eq_mk_rep K z (fun h0 ↦ by simp [h0] at hxz)
+  rw [← hc, Units.smul_def, map_smul, hxz, smul_eq_mul, mul_one] at this
+  exact Units.ne_zero c this
 
 /-- Produce a point on the projective line from an element of the field. -/
 def ofLine (x : K) : (ℙ K (Fin 2 → K)) :=
