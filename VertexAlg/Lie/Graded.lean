@@ -313,6 +313,8 @@ noncomputable instance {s : L →ₗ[R] E.L} (hs : Function.LeftInverse E.proj s
 -/
 end LieAlgebra.Extension
 
+/-! This is some API for graded Lie algebras where the multiplication is defined as bilinear maps
+between graded pieces. -/
 section GradedLieRing
 
 variable [CommRing R] [LieRing L] [LieAlgebra R L]

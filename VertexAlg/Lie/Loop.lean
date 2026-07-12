@@ -202,7 +202,6 @@ lemma ne_zero_or_ne_zero_of_add [AddCommMonoid A] {a b : A} (h : a + b ≠ 0) :
     a ≠ 0 ∨ b ≠ 0 := by
   grind
 
-set_option backward.isDefEq.respectTransparency false in
 lemma support_toFinsupp_mapMonomialLieHom {B : Type*} [AddCommMonoid A] [AddCommMonoid B]
     (f : B →+ A) (p : loopAlgebra R B L) {a : A}
     (ha : a ∈ ((toFinsupp R A L) ((mapMonomialLieHom R L f) p)).support) :
@@ -228,7 +227,6 @@ lemma support_toFinsupp_mapMonomialLieHom {B : Type*} [AddCommMonoid A] [AddComm
     · exact h1 h
     · exact h2 h
 
-set_option backward.isDefEq.respectTransparency false in
 lemma monomial_injective (a : A) : Function.Injective (monomial R L a) := by
   rw [← toFinsupp_symm_single']
   exact (EmbeddingLike.comp_injective _ (toFinsupp R A L).symm).mpr (Finsupp.single_injective a)
@@ -472,7 +470,6 @@ instance : IsLieAbelian (TrivialLieModule R L R) where
 instance : LieAlgebra R (TrivialLieModule R L R) where
   lie_smul _ _ _ := by simp [Bracket.bracket]
 
-set_option backward.isDefEq.respectTransparency false in
 /-- The extension of a loop algebra by a trivial module. -/
 noncomputable def extension [CommRing A] [IsAddTorsionFree R] [Algebra A R]
     (Φ : LinearMap.BilinForm R L) (hΦ : LinearMap.BilinForm.lieInvariant L Φ)
@@ -483,7 +480,6 @@ noncomputable def extension [CommRing A] [IsAddTorsionFree R] [Algebra A R]
 --letI _ := Extension.ringModuleOf (extension R A L Φ hΦ hΦs)
 --    have this := Extension.lieModuleOf (extension R A L Φ hΦ hΦs)
 
-set_option backward.isDefEq.respectTransparency false in
 @[simp]
 lemma twoCocycleOf_extension [CommRing A] [IsAddTorsionFree R] [Algebra A R]
     (Φ : LinearMap.BilinForm R L) (hΦ : LinearMap.BilinForm.lieInvariant L Φ)
@@ -500,7 +496,6 @@ section PositiveEnergy
 
 variable [CommRing A] [Algebra A R]
 
-set_option backward.isDefEq.respectTransparency false in
 lemma twoCocycle_apply_single_single [IsAddTorsionFree R] (Φ : LinearMap.BilinForm R L)
     (hΦ : LinearMap.BilinForm.lieInvariant L Φ)
     (hΦs : LinearMap.BilinForm.IsSymm Φ) {a b : A} (h : -b ≠ a) (r s : R) (x y : L) :
@@ -509,7 +504,6 @@ lemma twoCocycle_apply_single_single [IsAddTorsionFree R] (Φ : LinearMap.BilinF
     ((AddMonoidAlgebra.single a r) ⊗ₜ x) ((AddMonoidAlgebra.single b s) ⊗ₜ y) = 0 := by
   simp [twoCocycleOf_extension, Finsupp.single_eq_of_ne h]
 
-set_option backward.isDefEq.respectTransparency false in
 lemma twoCocycle_apply_single [IsAddTorsionFree R] (Φ : LinearMap.BilinForm R L)
     (hΦ : LinearMap.BilinForm.lieInvariant L Φ)
     (hΦs : LinearMap.BilinForm.IsSymm Φ) {a : A} {p : loopAlgebra R A L}
@@ -541,14 +535,15 @@ lemma twoCocycle_apply_single [IsAddTorsionFree R] (Φ : LinearMap.BilinForm R L
     | zero => simp_all
     | tmul _ _ =>
       simp only [twoCocycleOf_extension, twoCocycleOfBilinear_coe, twoCochainOfBilinear_apply_apply,
-        residuePairing_apply_apply, toFinsupp_single_tmul', Finsupp.sum]
+        residuePairing_apply_apply, toFinsupp_single_tmul', Finsupp.sum,
+        LinearEquiv.map_eq_zero_iff]
       exact Finset.sum_eq_zero fun b hb ↦ by simp [Finsupp.single_eq_of_ne (h b hb)]
     | add _ _ _ _ =>
       simp only [twoCocycleOf_extension, twoCocycleOfBilinear_coe, twoCochainOfBilinear_apply_apply,
-        residuePairing_apply_apply, toFinsupp_single_tmul', Finsupp.sum]
+        residuePairing_apply_apply, toFinsupp_single_tmul', Finsupp.sum,
+        LinearEquiv.map_eq_zero_iff]
       exact Finset.sum_eq_zero fun b hb ↦ by simp [Finsupp.single_eq_of_ne (h b hb)]
 
-set_option backward.isDefEq.respectTransparency false in
 lemma twoCocycle_apply_apply_zero [IsAddTorsionFree R] (Φ : LinearMap.BilinForm R L)
     (hΦ : LinearMap.BilinForm.lieInvariant L Φ)
     (hΦs : LinearMap.BilinForm.IsSymm Φ) (p q : loopAlgebra R A L)
@@ -597,7 +592,6 @@ noncomputable def monomial' [IsAddTorsionFree R] (Φ : LinearMap.BilinForm R L)
   map_add' x y := by rw [← of_add, Prod.mk_zero_add_mk_zero, ← TensorProduct.tmul_add]
   map_smul' r x := by rw [TensorProduct.tmul_smul, RingHom.id_apply, ← of_smul, Prod.smul_mk_zero]
 
-set_option backward.isDefEq.respectTransparency false in
 @[simp]
 lemma proj_monomial' [IsAddTorsionFree R] (Φ : LinearMap.BilinForm R L)
     (hΦ : LinearMap.BilinForm.lieInvariant L Φ) (hΦs : LinearMap.BilinForm.IsSymm Φ) (a : A)

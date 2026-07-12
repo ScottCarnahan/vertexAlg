@@ -6,15 +6,11 @@ Authors: Joël Riou, Johan Commelin
 module
 
 public import Mathlib.Algebra.Ring.NegOnePow
+public import Mathlib.Algebra.Group.NatPowAssoc
 
 /-!
 # Integer powers of (-1)
-
-This file defines the map `negOnePow : ℤ → ℤˣ` which sends `n` to `(-1 : ℤˣ) ^ n`.
-
-The definition of `negOnePow` and some lemmas first appeared in contributions by
-Johan Commelin to the Liquid Tensor Experiment.
-
+Add a lemma
 -/
 
 @[expose] public section
@@ -26,7 +22,7 @@ namespace Int
 
 @[simp]
 lemma negOnePow_smul_pow {R : Type*} [Ring R] (x : R) (n : ℕ) :
-    Int.negOnePow n • x ^ n = (- x) ^ n := by
+    negOnePow n • x ^ n = (- x) ^ n := by
   rw [neg_pow, Units.smul_def, coe_negOnePow_natCast, zsmul_eq_mul, cast_pow, cast_neg, cast_one]
 
 end Int

@@ -40,10 +40,6 @@ variable {K V : Type*} [Field K] [AddCommGroup V] [Module K V]
 
 open scoped LinearAlgebra.Projectivization
 
-/-- (delete this?) The hyperplane given by a nonzero dual vector.
-If the vector is zero, we get the whole space. -/
-def hyperplaneOf (x : V →ₗ[K] K) := x.ker.projectivization
-
 /-- Given a dual vector, embed the preimage of 1 into projective space. When the dual vector is
 zero, this is the embedding of the empty set. -/
 def complement (x : V →ₗ[K] K) : x⁻¹' {1} ↪ ℙ K V where
@@ -103,10 +99,49 @@ lemma notMem_range_complement (x : V →ₗ[K] K) (y : ℙ K V) (hy : y ∈ x.ke
   rw [← hc, Units.smul_def, map_smul, hxz, smul_eq_mul, mul_one] at this
   exact Units.ne_zero c this
 
+lemma subsingleton_projectivization_ker_proj :
+    Subsingleton (LinearMap.proj (R := K) (φ := fun _ ↦ K) (0 : Fin 2)).ker.projectivization where
+  allEq x y := by
+    obtain ⟨x, hx⟩ := x
+    obtain ⟨y, hy⟩ := y
+    simp only [Fin.isValue, Subtype.mk.injEq]
+    rw [Submodule.mem_projectivization_iff_submodule_le]  at hx hy
+    refine submodule_injective ?_
+    have : (LinearMap.proj (R := K) (φ := fun i ↦ K) (0 : Fin 2)).ker =
+        Submodule.span K {Pi.single (1 : Fin 2) (1 : K)} := by
+      ext z
+      constructor
+      · intro h
+        simp only [Fin.isValue, LinearMap.mem_ker, LinearMap.coe_proj, Function.eval] at h
+        rw [Submodule.mem_span_singleton]
+        use z 1
+        ext i
+        by_cases hi : i = 0
+        · simp [hi, h]
+        · simp [show i = 1 by grind only]
+      · intro h
+        rw [Submodule.mem_span_singleton] at h
+        obtain ⟨a, ha⟩ := h
+        simp [← ha]
+    have hxs : x.submodule = (LinearMap.proj 0).ker := by
+      refine Submodule.eq_of_le_of_finrank_le hx ?_
+      rw [finrank_submodule, this, Submodule.finrank_le_one_iff_isPrincipal]
+      refine (Submodule.isPrincipal_iff (K ∙ Pi.single 1 1)).mpr (by use (Pi.single 1 1))
+    rw [hxs]
+    refine (Submodule.eq_of_le_of_finrank_le hy ?_).symm
+    rw [finrank_submodule, this, Submodule.finrank_le_one_iff_isPrincipal]
+    refine (Submodule.isPrincipal_iff (K ∙ Pi.single 1 1)).mpr (by use (Pi.single 1 1))
+
 /-- Produce a point on the projective line from an element of the field. -/
 def ofLine (x : K) : (ℙ K (Fin 2 → K)) :=
   Projectivization.mk K (fun i ↦ if i = 0 then 1 else x)
     (Function.ne_iff.mpr (Exists.intro 0 (by simp)))
+
+lemma ofLine_eq_complement (x : K) :
+    ofLine x = complement (LinearMap.proj (R := K) 0)
+      ⟨fun (i : Fin 2) ↦ if i = 0 then 1 else x, by simp⟩ :=
+  rfl
+
 
 lemma ofLine_injective : Function.Injective (ofLine (K := K)) := by
   intro x y h
