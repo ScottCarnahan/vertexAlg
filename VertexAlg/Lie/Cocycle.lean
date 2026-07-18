@@ -366,7 +366,7 @@ lemma coboundary_first_alternating (n : ℕ) (f : L [⋀^Fin n]→ₗ[R] M) (g :
     (i j : Fin (n + 1)) (h : g i = g j) (hij : i ≠ j) :
     (∑ i : Fin (n + 1), coboundary_first_summand f.toMultilinearMap i).toFun g = 0 := by
   simp only [coboundary_first_summand, AlternatingMap.coe_multilinearMap,
-    MultilinearMap.toFun_eq_coe, MultilinearMap.coe_sum, MultilinearMap.coe_mk, Finset.sum_apply]
+    MultilinearMap.toFun_eq_coe, FunLike.coe_sum, MultilinearMap.coe_mk, Finset.sum_apply]
   rw [Finset.sum_eq_add_of_mem i j (Finset.mem_univ i) (Finset.mem_univ j) hij]
   · simp_rw [h, Units.smul_def, ← lie_smul, ← lie_add]
     suffices (Int.negOnePow i.val : ℤ) • f (i.removeNth g) +

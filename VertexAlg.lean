@@ -4,6 +4,7 @@ import VertexAlg.Extras.NuSMeval
 import VertexAlg.Extras.RevLex
 import VertexAlg.GroupActionEquiv
 import VertexAlg.GroupTheory.Golay
+import VertexAlg.GroupTheory.IntegerValued
 import VertexAlg.HahnSeries
 import VertexAlg.LaurentPoly
 import VertexAlg.Lie.Basic
@@ -26,6 +27,7 @@ import VertexAlg.toMathlib.Binomial
 import VertexAlg.toMathlib.Decomposition
 import VertexAlg.toMathlib.DirectSum
 import VertexAlg.toMathlib.FinsuppBasic
+import VertexAlg.toMathlib.Graded
 import VertexAlg.toMathlib.GroupBasic
 import VertexAlg.toMathlib.NegOnePow
 import VertexAlg.toMathlib.PointwiseSMul

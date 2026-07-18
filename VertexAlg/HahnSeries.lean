@@ -489,7 +489,7 @@ open MonoidAlgebra Finsupp Finset in
 omit [IsOrderedCancelAddMonoid Γ] in
 theorem ofFinsupp_smul_coeff {R} [CommSemiring R] [Module R V] (f : AddMonoidAlgebra R Γ)
     (x : HahnModule Γ₁ R V) :
-    ((HahnModule.of R).symm ((HahnSeries.ofFinsupp f) • x)).coeff =
+    ((HahnModule.of R).symm ((HahnSeries.ofFinsupp f.coeff) • x)).coeff =
       f • ((HahnModule.of R).symm x).coeff := by
   ext g
   rw [coeff_smul, AddMonoidAlgebra.smul_eq, HahnSeries.coeff_ofFinsupp']
@@ -513,20 +513,20 @@ namespace HahnSeries
 def ofAddMonoidAlgebra [PartialOrder Γ] [AddCancelCommMonoid Γ] [IsOrderedCancelAddMonoid Γ]
     [CommSemiring R] :
     AddMonoidAlgebra R Γ →ₐ[R] HahnSeries Γ R where
-  toFun := ofFinsupp
+  toFun x := ofFinsupp x.coeff
   map_one' := by
     ext g
     by_cases h : g = 0 <;> simp [h, AddMonoidAlgebra.one_def]
   map_mul' x y := by
       ext g
       rw [← of_symm_smul_of_eq_mul,
-        HahnModule.ofFinsupp_smul_coeff x (HahnModule.of R (ofFinsupp y)),
+        HahnModule.ofFinsupp_smul_coeff x (HahnModule.of R (ofFinsupp y.coeff)),
         Equiv.symm_apply_apply, coeff_ofFinsupp, coeff_ofFinsupp',
         AddMonoidAlgebra.smul_eq_addMonoidAlgebra_mul]
   map_zero' := rfl
   map_add' x y := by
     simp only [← ofFinsuppLinearMap_apply R, ← map_add]
-    exact LinearMap.congr_fun rfl (x + y) --defeq problem here
+    exact LinearMap.congr_fun rfl (x + y).coeff
   commutes' r := by
     ext g
     by_cases h : g = 0
@@ -834,7 +834,7 @@ theorem pi_finite_co_support {σ : Type*} (s : Finset σ) {R} [CommSemiring R] (
         ∏ i ∈ s', (if h : i ∈ cons a s' has then t i (b i h) else 1) =
         ∏ i ∈ s', if h : i ∈ s' then t i (b i (mem_cons_of_mem h)) else 1 :=
       fun b => prod_congr rfl fun x hx => (by simp [*])
-    apply ((addAntidiagonal (htp a) (pi_PWO_iUnion_support s' α htp) g).finite_toSet.biUnion'
+    apply ((antidiagonal (htp a) (pi_PWO_iUnion_support s' α htp) g).finite_toSet.biUnion'
       _).subset _
     · exact fun ij _ => {b : (i : σ) → i ∈ (cons a s' has) → α i |
         (t a (b a (mem_cons_self a s'))).coeff ij.1 *
@@ -855,8 +855,8 @@ theorem pi_finite_co_support {σ : Type*} (s : Finset σ) {R} [CommSemiring R] (
           exact right_ne_zero_of_mul hy.1
       · refine Injective.injOn ?_
         intro x y hxy
-        simp_all only [dite_true, cons_eq_insert, mem_insert, or_true, mem_coe, mem_addAntidiagonal,
-          Set.mem_iUnion, mem_support, ne_eq, Prod.mk.injEq]
+        simp_all only [dite_true, cons_eq_insert, mem_insert, or_true, mem_coe,
+          Finset.mem_antidiagonal, Set.mem_iUnion, mem_support, ne_eq, Prod.mk.injEq]
         ext i hi
         by_cases hhi : i = a
         · exact hhi ▸ hxy.1
@@ -864,13 +864,13 @@ theorem pi_finite_co_support {σ : Type*} (s : Finset σ) {R} [CommSemiring R] (
     · intro x hx
       simp only [Set.mem_setOf_eq] at hx
       have hhx := exists_ne_zero_of_sum_ne_zero hx
-      simp only [mem_coe, mem_addAntidiagonal, Set.mem_iUnion, mem_support, ne_eq,
+      simp only [mem_coe, Finset.mem_antidiagonal, Set.mem_iUnion, mem_support, ne_eq,
         mem_cons, Set.mem_setOf_eq, exists_prop, Prod.exists]
       use hhx.choose.1, hhx.choose.2
       refine ⟨⟨?_, ?_⟩, hhx.choose_spec.2⟩
       · use x a (mem_cons_self a s')
         exact left_ne_zero_of_mul hhx.choose_spec.2
-      · refine ⟨?_, (Finset.mem_addAntidiagonal.mp hhx.choose_spec.1).2.2⟩
+      · refine ⟨?_, (Finset.mem_antidiagonal.mp hhx.choose_spec.1).2.2⟩
         use fun i hi => x i (mem_cons_of_mem hi)
         have h := right_ne_zero_of_mul hhx.choose_spec.2
         have hpr :
@@ -1190,11 +1190,11 @@ theorem finsum_antidiagonal_prod [AddCommMonoid α] [HasAntidiagonal α] (f : α
     · exact fun x _ y _ hxy => by simp_all
     · intro x hx
       simp_all only [mem_coe, Finsupp.mem_support_iff, ne_eq, coe_sigma, coe_image,
-        Set.mem_sigma_iff, Set.mem_image, Prod.exists, mem_antidiagonal, and_true]
+        Set.mem_sigma_iff, Set.mem_image, Prod.exists, HasAntidiagonal.mem_antidiagonal, and_true]
       use x.1, x.2
     · intro x hx h
       simp_all only [mem_sigma, mem_image, Finsupp.mem_support_iff, ne_eq, Prod.exists,
-        mem_antidiagonal, Set.mem_image, mem_coe, not_exists, not_and]
+        HasAntidiagonal.mem_antidiagonal, Set.mem_image, mem_coe, not_exists, not_and]
       have h0 : ∀ i j : α, ⟨i + j, (i, j)⟩ = x → f (i, j) = 0 := by
         intro i j
         contrapose!
@@ -1208,7 +1208,7 @@ theorem finsum_antidiagonal_prod [AddCommMonoid α] [HasAntidiagonal α] (f : α
     have h1 := exists_ne_zero_of_sum_ne_zero hx
     use h1.choose.1, h1.choose.2
     refine ⟨h1.choose_spec.2, ?_⟩
-    · rw [← @mem_antidiagonal]
+    · rw [← HasAntidiagonal.mem_antidiagonal]
       exact h1.choose_spec.1
 
 --#find_home! finsum_antidiagonal_prod --[Mathlib.RingTheory.Adjoin.Basic]
@@ -1525,11 +1525,8 @@ theorem single_sub_single_eq_zero_iff [Nontrivial R] (g g' : Γ) :
   refine ⟨?_, fun h ↦ (by simp [single_sub_single, h])⟩
   intro h
   by_contra hgg'
-  rw [single_sub_single, sub_eq_zero, MonoidAlgebra.ext_iff] at h
-  specialize h g
-  classical
-  rw [single_apply, single_apply] at h
-  simp [Ne.symm hgg'] at h
+  rw [single_sub_single, sub_eq_zero, MonoidAlgebra.ext_iff, Finsupp.ext_iff] at h
+  simpa [Ne.symm hgg'] using h g
 
 theorem single_sub_single_neg (g g' : Γ) :
     - single_sub_single g g' (R := R) = single_sub_single g' g := by
@@ -1958,7 +1955,7 @@ theorem coeff_single_mul_of_no_add [IsOrderedCancelAddMonoid Γ] {x : HahnSeries
   trans Finset.sum ∅ fun (ij : Γ × Γ) => x.coeff ij.fst * (single a r).coeff ij.snd
   · apply sum_congr _ fun _ _ => rfl
     ext ⟨a1, a2⟩
-    simp_all [mem_addAntidiagonal, coeff_single]
+    simp_all [Finset.mem_antidiagonal, coeff_single]
   · exact rfl
 --#find_home! coeff_single_mul_of_no_add --[Mathlib.RingTheory.HahnSeries.Multiplication]
 /-!

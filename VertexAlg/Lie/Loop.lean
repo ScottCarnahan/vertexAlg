@@ -83,7 +83,7 @@ lemma grade_eq (a : A) :
   · intro h
     simp only [LinearMap.mem_range]
     obtain ⟨y, hy⟩ := h
-    have ha : AddMonoidAlgebra.single a (1 : R) ∈ (Finsupp.lsingle (R := R) a).range := by
+    have ha : AddMonoidAlgebra.single a (1 : R) ∈ (AddMonoidAlgebra.lsingle (R := R) a).range := by
       use 1
       simp
     use ⟨AddMonoidAlgebra.single a (1 : R), ha⟩ ⊗ₜ y
@@ -189,13 +189,11 @@ lemma toFinsupp_monomial_apply (a : A) (x : L) :
   rw [← Function.comp_apply (f := toFinsupp R A L), ← toFinsupp_comp_monomial R]
 
 --replace?
-set_option backward.isDefEq.respectTransparency false in
 @[simp]
 lemma toFinsupp_single_tmul' (c : A) (z : L) (r : R) :
     ((toFinsupp R A L) (AddMonoidAlgebra.single c r ⊗ₜ[R] z)) = Finsupp.single c (r • z) := by
   ext a
-  by_cases h : c = a <;> simp [toFinsupp, h, AddMonoidAlgebra.basis, AddMonoidAlgebra.single,
-    LinearEquiv.refl, LinearMap.id]
+  by_cases h : c = a <;> simp [h, toFinsupp, AddMonoidAlgebra.basis]
 
 --remove when Mathlib updates
 lemma ne_zero_or_ne_zero_of_add [AddCommMonoid A] {a b : A} (h : a + b ≠ 0) :
@@ -249,11 +247,11 @@ lemma add_finsupp {α A : Type*} [AddMonoid A] {f g : α → A} (hf : Finite f.s
 --#find_home! add_finsupp --[Mathlib.Algebra.Group.Finsupp]
 
 lemma finite_support_bracket [AddCancelCommMonoid A] (a : A) (x y : A →₀ L) :
-    Finite (fun (k : Set.addAntidiagonal Set.univ Set.univ a) ↦ ⁅x k.1.1, y k.1.2⁆).support := by
+    Finite (fun (k : Set.antidiagonal Set.univ Set.univ a) ↦ ⁅x k.1.1, y k.1.2⁆).support := by
   refine Set.Finite.of_finite_image (f := fun k ↦ k.1.1) ?_ ?_
   · refine Set.Finite.subset (Finite.of_fintype x.support) ?_
     simp only [Set.image_subset_iff, Function.support_subset_iff, ne_eq, Set.mem_preimage,
-      SetLike.mem_coe, Finsupp.mem_support_iff, Subtype.forall, Set.mem_addAntidiagonal,
+      SetLike.mem_coe, Finsupp.mem_support_iff, Subtype.forall, Set.mem_antidiagonal,
       Set.mem_univ, true_and, Prod.forall]
     intro k l _ h
     contrapose! h
@@ -263,7 +261,7 @@ lemma finite_support_bracket [AddCancelCommMonoid A] (a : A) (x y : A →₀ L) 
 /-- This needs to be generalized: replace Lie bracket with any bilinear map. -/
 lemma finite_support_finsum_bracket [AddCommMonoid A] (x y : A →₀ L) :
     Finite (fun (a : A) ↦
-      ∑ᶠ (k : Set.addAntidiagonal Set.univ Set.univ a), ⁅x k.1.1, y k.1.2⁆).support := by
+      ∑ᶠ (k : Set.antidiagonal Set.univ Set.univ a), ⁅x k.1.1, y k.1.2⁆).support := by
   refine Set.Finite.subset (s := Set.range (fun (k : x.support × y.support) ↦ k.1.1 + k.2.1)) ?_ ?_
   · exact Set.finite_range fun (k : x.support × y.support) ↦ k.1.1 + k.2.1
   · intro n hn

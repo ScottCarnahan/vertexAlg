@@ -144,9 +144,11 @@ noncomputable def tensorDecomposition (N : Type*) [AddCommGroup N] [Module R N] 
     (TensorProduct.directSumLeft R R (fun a ↦ ℳ a) N
       ((DirectSum.decomposeLinearEquiv ℳ).rTensor N x))
   left_inv x := by
-    simp [coe_decomposeTensor ℳ N _, rTensor_decomposeLinearEquiv_symm]
+    simp only [coe_decomposeTensor ℳ N _, rTensor_decomposeLinearEquiv_symm,
+      LinearEquiv.symm_apply_apply]
   right_inv x := by
-    simp [coe_decomposeTensor ℳ N _, rTensor_decomposeLinearEquiv_symm]
+    simp only [coe_decomposeTensor ℳ N _, rTensor_decomposeLinearEquiv_symm,
+      LinearEquiv.apply_symm_apply]
 
 end Decomposition
 

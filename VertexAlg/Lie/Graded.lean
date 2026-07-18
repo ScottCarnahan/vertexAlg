@@ -61,8 +61,13 @@ instance instAddMonoidPullbackCoeAddMonoidHom [AddMonoid L] [AddMonoid M] (f : L
   zero_add _ := by ext <;> simp [zero_add]
   add_zero _ := by ext <;> simp
   nsmul n x := ⟨n • x.1, nsmul_mem_pullback x n⟩
-  nsmul_zero n := by ext <;> simp
-  nsmul_succ n x := by ext <;> simp [add_nsmul]
+  nsmul_zero n := by
+    simp only [(· • ·), SMul.smul]
+    simp only [nsmul_eq_smul, zero_nsmul]
+    exact Subtype.ext rfl
+  nsmul_succ n x := by
+    simp only [(· • ·), SMul.smul]
+    exact Subtype.ext (by simp [AddMonoid.nsmul_succ])
 
 instance instAddCommMonoidPullbackCoeAddMonoidHom [AddCommMonoid L] [AddCommMonoid M] {f : L →+ M}
     [AddCommMonoid N] {g : N →+ M} :
@@ -102,8 +107,13 @@ instance : AddCommMonoid (f.Pullback g) where
   zero_add _ := by ext <;> simp [zero_add]
   add_zero _ := by ext <;> simp
   nsmul n x := ⟨n • x.1, nsmul_mem_pullback x n⟩
-  nsmul_zero n := by ext <;> simp
-  nsmul_succ n x := by ext <;> simp [add_nsmul]
+  nsmul_zero n := by
+    simp only [(· • ·), SMul.smul]
+    simp only [nsmul_eq_smul, zero_nsmul]
+    exact Subtype.ext rfl
+  nsmul_succ n x := by
+    simp only [(· • ·), SMul.smul]
+    refine Subtype.ext (by simp [add_nsmul])
   add_comm _ _ := by ext <;> simp [add_comm]
 
 instance : SMul R (f.Pullback g) where
@@ -258,7 +268,8 @@ namespace LieAlgebra.Extension
 variable [CommRing R] [LieRing L] [LieAlgebra R L] (ℒ : ι → Submodule R L) [LieRing M]
   [LieAlgebra R M] (E : LieAlgebra.Extension R M L)
 
-/-! Make a more general decomposition on a direct sum of two graded modules. -/
+/-! Make a more general decomposition on a direct sum of two graded modules. Then we don't need the
+conditional types. -/
 
 /-- The decomposition on an extension induced by a section. -/
 def gradedPartOfSection [Zero ι] (i : ι) [Decidable (i = 0)] (s : L →ₗ[R] E.L) :
