@@ -21,6 +21,9 @@ variable {ι σ R L M N P : Type*}
 
 section pullback
 
+/-! This section may be deleted - Decompositions can't be pulled back because the kernel would live
+in more than one degree. -/
+
 instance instZeroPullbackCoeZeroHom [Zero L] [Zero M] (f : ZeroHom L M) [Zero N] (g : ZeroHom N M) :
     Zero (Function.Pullback f g) where
   zero := ⟨0, by simp⟩
@@ -214,22 +217,38 @@ namespace DirectSum.Decomposition
 
 variable [CommSemiring R] [AddCommMonoid L] [Module R L] [AddCommMonoid M] [Module R M]
 
-variable (f : L →ₗ[R] M) (ℳ : ι → Submodule R M)
+variable {f : L →ₗ[R] M} {s : M →ₗ[R] L} (h : Function.LeftInverse f s) (ℳ : ι → Submodule R M)
 
-/-- The pullback of a decomposition along a linear map. -/
-def Pullback [DecidableEq ι] [Decomposition ℳ] : ι → Submodule R L :=
-  fun i ↦ (LinearMap.Pullback.fst f
-    ((decomposeLinearEquiv ℳ).symm ∘ₗ DirectSum.lof R ι (fun i ↦ ℳ i) i)).range
-
-lemma pullback_apply [DecidableEq ι] [Decomposition ℳ] (i : ι) :
-    Pullback f ℳ i = (ℳ i).comap f := by
-  ext
-  simp [Pullback]
-
--- want equiv from L to sum Pullback. Have decompose: equiv from M to sum ℳ i. This should be
--- change definition of Pullback to LinearMap.Pullback of
--- `((decompose ℳ).symm ∘ₗ DirectSum.of ℳ i)` along f.
-
+/-
+/-- Decompose a module by setting it to lie over a single element. -/
+protected def single [DecidableEq ι] (i : ι) :
+    Decomposition (fun (j : ι) ↦ if j = i then (⊤ : Submodule R L) else ⊥) where
+  decompose' x := of _ i ⟨x, by simp⟩
+  left_inv x := by simp
+  right_inv x := by
+    ext j
+    by_cases h : j = i
+    · --simp only [SetLike.coe_eq_coe]
+      rw [h, of_eq_same]
+      have : (DirectSum.coeAddMonoidHom fun j ↦ if j = i then ⊤ else ⊥) x = x i := by
+        induction x using DirectSum.induction_on with
+        | zero => simp
+        | of k x =>
+          by_cases hk : k = i
+          · rw!(castMode := .all) [hk]
+            simp
+          · simp only [coeAddMonoidHom_of]
+            rw!(castMode := .all) [if_neg hk]
+            simp+instances
+            sorry
+        | add x y hx hy => simp [hx, hy]
+--        rw!(castMode := .all) [if_pos rfl]
+      simpa
+    · simp only [SetLike.coe_eq_coe]
+      rw [of_eq_of_ne i j _ h]
+      rw!(castMode := .all) [if_neg h]
+      exact Submodule.bot_ext_iff.mpr trivial
+-/
 end DirectSum.Decomposition
 
 end pullback
@@ -239,77 +258,121 @@ namespace LieAlgebra.Extension
 variable [CommRing R] [LieRing L] [LieAlgebra R L] (ℒ : ι → Submodule R L) [LieRing M]
   [LieAlgebra R M] (E : LieAlgebra.Extension R M L)
 
+/-! Make a more general decomposition on a direct sum of two graded modules. -/
+
 /-- The decomposition on an extension induced by a section. -/
-def decompositionOfSection [Zero ι] (i : ι) [Decidable (i = 0)] (s : L →ₗ[R] E.L) :
+def gradedPartOfSection [Zero ι] (i : ι) [Decidable (i = 0)] (s : L →ₗ[R] E.L) :
     Submodule R E.L :=
   if i = 0 then (s.domRestrict (ℒ 0)).range ⊔ E.proj.ker else (s.domRestrict (ℒ i)).range
 
-lemma sub_section_mem_decompositionOfSection [DecidableEq ι] [Decomposition ℒ] [Zero ι]
+lemma sub_section_mem_gradedPartOfSection [DecidableEq ι] [Decomposition ℒ] [Zero ι]
     {s : L →ₗ[R] E.L} (hs : Function.LeftInverse E.proj s) {i : ι} (hi : i = 0) (x : E.L) :
-    x - s (E.proj x) ∈ E.decompositionOfSection ℒ i s := by
-  simp only [decompositionOfSection, hi]
+    x - s (E.proj x) ∈ E.gradedPartOfSection ℒ i s := by
+  simp only [gradedPartOfSection, hi]
   exact Submodule.mem_sup_right (by simp [hs.eq])
 
-lemma section_component_mem_decompositionOfSection [DecidableEq ι] [Decomposition ℒ] [Zero ι]
-    (i : ι) {s : L →ₗ[R] E.L} (x : E.L) :
-    s (component R ι (fun i ↦ ℒ i) i (decompose ℒ (E.proj x))) ∈
-      E.decompositionOfSection ℒ i s := by
+lemma section_component_mem_gradedPartOfSection [DecidableEq ι] [Decomposition ℒ] [Zero ι]
+    (i : ι) {s : L →ₗ[R] E.L} (x : L) :
+    s (component R ι (fun i ↦ ℒ i) i (decompose ℒ x)) ∈
+      E.gradedPartOfSection ℒ i s := by
   by_cases h : i = 0
-  · simp only [decompositionOfSection, h, ↓reduceIte, LinearMap.range_domRestrict,
+  · simp only [gradedPartOfSection, h, ↓reduceIte, LinearMap.range_domRestrict,
     LieIdeal.toLieSubalgebra_toSubmodule, LieHom.ker_toSubmodule]
     refine Submodule.mem_sup_left ?_
     rw [h]
-    exact Submodule.apply_coe_mem_map s ((component R ι (fun i ↦ ℒ i) 0) (decompose ℒ (E.proj x)))
-  · simp only [decompositionOfSection, h, ↓reduceIte, LinearMap.range_domRestrict]
-    exact Submodule.apply_coe_mem_map s ((component R ι (fun i ↦ ℒ i) i) (decompose ℒ (E.proj x)))
+    exact Submodule.apply_coe_mem_map s ((component R ι (fun i ↦ ℒ i) 0) (decompose ℒ x))
+  · simp only [gradedPartOfSection, h, ↓reduceIte, LinearMap.range_domRestrict]
+    exact Submodule.apply_coe_mem_map s ((component R ι (fun i ↦ ℒ i) i) (decompose ℒ x))
+
+/-- The lift of a section `s` from a graded part of `L` to the graded part of `E.L` -/
+@[simps]
+def liftSection [DecidableEq ι] [Decomposition ℒ] [Zero ι]
+    (i : ι) (s : L →ₗ[R] E.L) : ℒ i →ₗ[R] E.gradedPartOfSection ℒ i s where
+  toFun x := ⟨s (component R ι (fun i ↦ ℒ i) i (decompose ℒ x)),
+    E.section_component_mem_gradedPartOfSection ℒ i x⟩
+  map_add' _ _ := by simp
+  map_smul' _ _ := by simp
+
+lemma proj_comp_liftSection [DecidableEq ι] [Decomposition ℒ] [Zero ι]
+    (i : ι) {s : L →ₗ[R] E.L} (hs : Function.LeftInverse E.proj s) (x : ℒ i) :
+    E.proj (E.liftSection ℒ i s x) = x := by
+  simp [hs.eq, ← apply_eq_component]
 
 /-- The map to the decomposition on an extension induced by a section. -/
-def toDecompositionOfSection [DecidableEq ι] [Decomposition ℒ] [Zero ι] (i : ι) {s : L →ₗ[R] E.L}
+def toGradedPartOfSection [DecidableEq ι] [Decomposition ℒ] [Zero ι] (i : ι) {s : L →ₗ[R] E.L}
     (hs : Function.LeftInverse E.proj s) (x : E.L) :
-    decompositionOfSection ℒ E i s :=
-  if hi : i = 0 then ⟨x - s (E.proj x), E.sub_section_mem_decompositionOfSection ℒ hs hi x⟩ +
+    gradedPartOfSection ℒ E i s :=
+  if hi : i = 0 then ⟨x - s (E.proj x), E.sub_section_mem_gradedPartOfSection ℒ hs hi x⟩ +
     ⟨s (component R ι (fun i ↦ ℒ i) i (decompose ℒ (E.proj x))),
-      E.section_component_mem_decompositionOfSection ℒ i x⟩
+      E.section_component_mem_gradedPartOfSection ℒ i (E.proj x)⟩
   else ⟨s (component R ι (fun i ↦ ℒ i) i (decompose ℒ (E.proj x))),
-    E.section_component_mem_decompositionOfSection ℒ i x⟩
+    E.section_component_mem_gradedPartOfSection ℒ i (E.proj x)⟩
 
 @[simp]
-lemma toDecompositionOfSection_apply_zero [DecidableEq ι] [Decomposition ℒ] [Zero ι]
+lemma toGradedPartOfSection_apply_zero [DecidableEq ι] [Decomposition ℒ] [Zero ι]
     {s : L →ₗ[R] E.L} (hs : Function.LeftInverse E.proj s) (x : E.L) :
-    toDecompositionOfSection ℒ E 0 hs x =
-    ⟨x - s (E.proj x), E.sub_section_mem_decompositionOfSection ℒ hs rfl x⟩ +
+    toGradedPartOfSection ℒ E 0 hs x =
+    ⟨x - s (E.proj x), E.sub_section_mem_gradedPartOfSection ℒ hs rfl x⟩ +
     (⟨s (component R ι (fun i ↦ ℒ i) 0 (decompose ℒ (E.proj x))),
-      E.section_component_mem_decompositionOfSection ℒ 0 x⟩ :
-        decompositionOfSection ℒ E 0 s) := by
-  simp [toDecompositionOfSection]
+      E.section_component_mem_gradedPartOfSection ℒ 0 (E.proj x)⟩ :
+        gradedPartOfSection ℒ E 0 s) := by
+  simp [toGradedPartOfSection]
 
 @[simp]
-lemma toDecompositionOfSection_apply_of_ne [DecidableEq ι] [Decomposition ℒ] [Zero ι] {i : ι}
+lemma toGradedPartOfSection_apply_of_ne [DecidableEq ι] [Decomposition ℒ] [Zero ι] {i : ι}
     (hi : i ≠ 0) {s : L →ₗ[R] E.L} (hs : Function.LeftInverse E.proj s) (x : E.L) :
-    toDecompositionOfSection ℒ E i hs x =
+    toGradedPartOfSection ℒ E i hs x =
     ⟨s (component R ι (fun i ↦ ℒ i) i (decompose ℒ (E.proj x))),
-      E.section_component_mem_decompositionOfSection ℒ i x⟩ := by
-  simp [hi, toDecompositionOfSection]
+      E.section_component_mem_gradedPartOfSection ℒ i (E.proj x)⟩ := by
+  simp [hi, toGradedPartOfSection]
+
+lemma toGradedPartOfSection_apply_of_section [DecidableEq ι] [Decomposition ℒ] [Zero ι] (i : ι)
+    {s : L →ₗ[R] E.L} (hs : Function.LeftInverse E.proj s) (x : L) :
+    toGradedPartOfSection ℒ E i hs (s x) = ⟨s (component R ι (fun i ↦ ℒ i) i (decompose ℒ x)),
+      E.section_component_mem_gradedPartOfSection ℒ i x⟩ := by
+  by_cases hi : i = 0
+  · rw [hi, toGradedPartOfSection_apply_zero]
+    simp [hs.eq]
+  · rw [toGradedPartOfSection_apply_of_ne ℒ E hi]
+    simp [hs.eq]
 
 variable [DecidableEq ι] [AddCommMonoid ι] [GradedLieAlgebra ℒ]
+
 /-
 --set_option trace.Meta.synthInstance true in
-noncomputable instance {s : L →ₗ[R] E.L} (hs : Function.LeftInverse E.proj s) :
-    Decomposition (fun i ↦ E.decompositionOfSection ℒ i s) where
+@[reducible]
+noncomputable def decompositionOfSection {s : L →ₗ[R] E.L} (hs : Function.LeftInverse E.proj s) :
+    Decomposition (fun i ↦ E.gradedPartOfSection ℒ i s) where
   decompose' x :=
     letI _ (i : ι) (x : ℒ i) := Classical.propDecidable (x ≠ 0)
-    DFinsupp.mk (decompose ℒ (E.proj x)).support (fun i ↦ (E.toDecompositionOfSection ℒ i hs x))
+    DFinsupp.mk ({(0 : ι)} ⊔ (decompose ℒ (E.proj x)).support)
+      (fun i ↦ (E.toGradedPartOfSection ℒ i hs x))
   left_inv x := by
-    simp only [decompositionOfSection, LieIdeal.toLieSubalgebra_toSubmodule,
-      LieHom.ker_toSubmodule, SetLike.coe_sort_coe]
+    induction x using Extension.inductionOn with
+    | hs => exact hs
+    | sect x =>
+      simp only [SetLike.coe_sort_coe, toGradedPartOfSection_apply_of_section]
+      rw [hs.eq]
 
-    refine E.eq_of_proj_eq hs ?_ ?_
-    · sorry
+      sorry
+    | incl x =>
+      simp only [SetLike.coe_sort_coe]
+      letI _ (i : ι) (x : ℒ i) := Classical.propDecidable (x ≠ 0)
+      have : (DFinsupp.support ((decompose ℒ) (0 : L))) = ∅ := by simp
+      rw [proj_incl, this, Finset.singleton_zero, Finset.sup_eq_union', Finset.union_empty]
 
-    sorry
-
-
-  right_inv := sorry
+      sorry
+    | add m m' _ _ =>
+      simp only [SetLike.coe_sort_coe]
+      sorry
+  right_inv x := by
+    induction x using DirectSum.induction_on' with
+    | h0 =>
+      simp
+      sorry
+    | hadd i b f _ _ _ =>
+      simp
+      sorry
 -/
 end LieAlgebra.Extension
 

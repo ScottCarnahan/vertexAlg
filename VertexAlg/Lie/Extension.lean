@@ -126,6 +126,18 @@ lemma eq_of_proj_eq (E : Extension R N M) {x y : E.L} {s : M →ₗ[R] E.L} (hs 
     x = y := by
   rwa [EquivLike.apply_eq_iff_eq, Subtype.mk_eq_mk, hp, sub_left_inj] at hK
 
+@[elab_as_elim]
+protected theorem inductionOn {motive : E.L → Prop} {s : M →ₗ[R] E.L} (hs : LeftInverse E.proj s)
+    (sect : ∀ x, motive (s x)) (incl : ∀ x, motive (E.incl x))
+    (add : ∀ m m' : E.L, motive m → motive m' → motive (m + m')) : ∀ m, motive m := by
+  intro m
+  rw [← sub_add_cancel m (s (E.proj m))]
+  refine add _ _ ?_ (sect _)
+  have : m - s (E.proj m) = E.incl (E.toKer.symm ⟨m - s (E.proj m), by simp [hs.eq]⟩) := by
+    simp [← toKer_coe]
+  rw [this]
+  exact incl _
+
 /-- `Extension`s are equivalent iff there is a homomorphism making a commuting diagram. -/
 @[ext] structure Equiv (E' : Extension R N M) where
   /-- The homomorphism -/

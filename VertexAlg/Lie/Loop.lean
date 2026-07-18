@@ -21,7 +21,7 @@ Add to `Mathlib.Algebra.Lie.Graded`
 @[expose] public section
 
 
-variable {ι σ A R L : Type*}
+variable {ι σ A R L M : Type*}
 
 namespace LieAlgebra.LoopAlgebra
 
@@ -452,6 +452,9 @@ end Grading
 
 section CentralExt
 
+/-! It may be better to make a new type synonym for the 1-dimensional abelian Lie algebra with
+trivial action of `L`. -/
+
 variable (R A L : Type*) [CommRing R] [LieRing L] [LieAlgebra R L]
 
 /-- We endow the trivial Lie module with a Lie ring structure with zero bracket. -/
@@ -599,6 +602,11 @@ lemma proj_monomial' [IsAddTorsionFree R] (Φ : LinearMap.BilinForm R L)
     (extension R A L Φ hΦ hΦs).proj ((monomial' R L Φ hΦ hΦs a) x) =
       (AddMonoidAlgebra.single a (1 : R) ⊗ₜ x):=
   rfl
+
+class PositiveEnergy [DecidableEq A] [PartialOrder A] [IsOrderedAddMonoid A] (ℒ : A → Submodule R L)
+    [GradedLieAlgebra ℒ] [AddCommGroup M] [Module R M] [LieRingModule L M]
+    (ℳ : A → Submodule R M) extends LieModule R L M where
+
 
 /-
 open Finsupp Pointwise in

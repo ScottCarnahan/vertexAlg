@@ -22,15 +22,17 @@ section
 variable [DecidableEq ι] [AddCommMonoid M]
 variable [SetLike σ M] [AddSubmonoidClass σ M] (ℳ : ι → σ) [Decomposition ℳ]
 
+lemma support_subset_of_mem {i : ι} {x : M} (hi : x ∈ ℳ i)
+    [(i : ι) → (x : ℳ i) → Decidable (x ≠ 0)] :
+    DFinsupp.support (decomposeAddEquiv ℳ x) ⊆ {i} := by
+  rw [decomposeAddEquiv_apply, decompose_of_mem ℳ hi]
+  exact DirectSum.support_of_subset
+
 lemma zero_of_mem_ne {i j : ι} (hij : i ≠ j) {x : M} (hi : x ∈ ℳ i) (hj : x ∈ ℳ j) :
     x = 0 := by
   classical
-  have : DFinsupp.support (decomposeAddEquiv ℳ x) ⊆ {i} := by
-    rw [decomposeAddEquiv_apply, decompose_of_mem ℳ hi]
-    exact DirectSum.support_of_subset
-  have : DFinsupp.support (decomposeAddEquiv ℳ x) ⊆ {j} := by
-    rw [decomposeAddEquiv_apply, decompose_of_mem ℳ hj]
-    exact DirectSum.support_of_subset
+  have := support_subset_of_mem ℳ hi
+  have := support_subset_of_mem ℳ hj
   exact (AddEquiv.map_eq_zero_iff (decomposeAddEquiv ℳ)).mp
     (DFinsupp.support_eq_empty.mp (by grind))
 
@@ -52,43 +54,110 @@ end
 
 section
 
+variable [AddCommMonoid M] [Module R M] (ℳ : ι → Submodule R M)
+
+/-- The sum of pieces of a decomposition parametrized by the preimage of a point. -/
+def fiberModule [DecidableEq ι] [Decomposition ℳ] [(i : ι) → (x : ↥(ℳ i)) → Decidable (x ≠ 0)]
+    {κ : Type*} (f : ι → κ) (k : κ) : Submodule R M where
+  carrier := {x : M | ∀ i ∈ (decompose ℳ x).support, f i = k}
+  add_mem' {a b} hx hy i hi := by
+    simp only [decompose_add, DFinsupp.mem_support_toFun, add_apply] at hi
+    obtain (h|h) : ((decompose ℳ) a) i ≠ 0 ∨ ((decompose ℳ) b) i ≠ 0 := by
+      contrapose! hi
+      simp [hi.1, hi.2]
+    · simp only [DFinsupp.mem_support_toFun, Set.mem_setOf_eq] at hx
+      exact hx i h
+    · simp only [DFinsupp.mem_support_toFun, Set.mem_setOf_eq] at hy
+      exact hy i h
+  zero_mem' := by simp
+  smul_mem' _ _ h i hi := by
+    simp only [DFinsupp.mem_support_toFun, Set.mem_setOf_eq] at h hi
+    refine h i ?_
+    contrapose! hi
+    simp [smul_apply, hi]
+
+lemma mem_fiberModule_iff [DecidableEq ι] [Decomposition ℳ]
+    [(i : ι) → (x : ↥(ℳ i)) → Decidable (x ≠ 0)] {κ : Type*} (f : ι → κ) (k : κ) (x : M) :
+    x ∈ fiberModule ℳ f k ↔ ∀ i ∈ (decompose ℳ x).support, f i = k := by
+  simp [fiberModule]
+
+lemma decompose_mem_fiberModule_of [DecidableEq ι] [Decomposition ℳ]
+    [(i : ι) → (x : ↥(ℳ i)) → Decidable (x ≠ 0)] {κ : Type*} (f : ι → κ) (k : κ) (x : M) (i : ι) :
+    f i = k → (decompose ℳ x i : M) ∈ fiberModule ℳ f k := by
+  simp only [mem_fiberModule_iff, decompose_coe, DFinsupp.mem_support_toFun]
+  intro h j hj
+  contrapose! hj
+  have : j ≠ i := by contrapose! hj; rw [hj, h]
+  exact of_eq_of_ne i j _ this
+
+/-
+instance [DecidableEq ι] {κ : Type*} [DecidableEq κ] [Decomposition ℳ]
+    [(i : ι) → (x : ↥(ℳ i)) → Decidable (x ≠ 0)] (f : ι → κ) :
+    Decomposition (fiberModule ℳ f) where
+  decompose' x := DFinsupp.mk ((decompose ℳ x).support.image f)
+    fun k ↦ ∑ i ∈ (decompose ℳ x).support.filter (fun i ↦ f i = k),
+      ⟨(decompose ℳ x i), decompose_mem_fiberModule_of ℳ f k x i sorry⟩
+  left_inv x := by
+    simp only [SetLike.coe_sort_coe]
+    rw?
+-/
+
+end
+
+section
+
 variable [AddCommGroup L] [Module R L] [AddCommGroup M] [Module R M] (ℳ : ι → Submodule R M)
+
+/-- The trivial decomposition into the sum over a singleton. -/
+@[implicit_reducible]
+protected def ofUnique [DecidableEq ι] [Unique ι] :
+    Decomposition fun (_ : ι) ↦ (⊤ : Submodule R L) where
+  decompose' x := of (fun _ ↦ (⊤ : Submodule R L)) default ⟨x, Submodule.mem_top⟩
+  left_inv _ := by simp
+  right_inv x := by
+    ext j
+    simp only [Unique.eq_default j, of_eq_same]
+    induction x using DirectSum.induction_on with
+    | zero => simp
+    | of i x => simp [Unique.eq_default i]
+    | add x y hx hy => simp [hx, hy]
+--#find_home! DirectSum.Decomposition.ofUnique --[Mathlib.Algebra.DirectSum.Decomposition]
 
 variable [Zero ι] (p : L →ₗ[R] M)
 
 /-- The decomposition induced by a section of a surjection, where the kernel is placed in degree
 zero. -/
-def decompositionOfSection (s : M →ₗ[R] L) (i : ι) [Decidable (i = 0)] :
+def submoduleOfSection (s : M →ₗ[R] L) (i : ι) [Decidable (i = 0)] :
     Submodule R L :=
   if i = 0 then (s.domRestrict (ℳ 0)).range ⊔ p.ker else (s.domRestrict (ℳ i)).range
 
-lemma sub_mem_decompositionOfSection [DecidableEq ι] {s : M →ₗ[R] L}
+lemma sub_mem_submoduleOfSection [DecidableEq ι] {s : M →ₗ[R] L}
     (hs : Function.LeftInverse p s) {i : ι} (hi : i = 0) {x : L} :
-    x - s (p x) ∈ decompositionOfSection ℳ p s i := by
-  simp only [decompositionOfSection, hi]
+    x - s (p x) ∈ submoduleOfSection ℳ p s i := by
+  simp only [submoduleOfSection, hi]
   exact Submodule.mem_sup_right (by simp [hs.eq])
 
-lemma section_component_mem_decompositionOfSection [DecidableEq ι] [Decomposition ℳ]
+lemma section_component_mem_submoduleOfSection [DecidableEq ι] [Decomposition ℳ]
     (i : ι) {s : M →ₗ[R] L} (x : L) :
     s (component R ι (fun i ↦ ℳ i) i (decompose ℳ (p x))) ∈
-      decompositionOfSection ℳ p s i := by
+      submoduleOfSection ℳ p s i := by
   by_cases h : i = 0
-  · simp only [decompositionOfSection, h, ↓reduceIte, LinearMap.range_domRestrict]
+  · simp only [submoduleOfSection, h, ↓reduceIte, LinearMap.range_domRestrict]
     refine Submodule.mem_sup_left ?_
     rw [h]
     exact Submodule.apply_coe_mem_map s ((component R ι (fun i ↦ ℳ i) 0) (decompose ℳ (p x)))
-  · simp only [decompositionOfSection, h, ↓reduceIte, LinearMap.range_domRestrict]
+  · simp only [submoduleOfSection, h, ↓reduceIte, LinearMap.range_domRestrict]
     exact Submodule.apply_coe_mem_map s ((component R ι (fun i ↦ ℳ i) i) (decompose ℳ (p x)))
 
 /-- The map to the decomposition induced by a section of a surjection. -/
 def toDecompositionOfSection {p : L →ₗ[R] M} [DecidableEq ι] [Decomposition ℳ] (i : ι)
     {s : M →ₗ[R] L} (hs : Function.LeftInverse p s) :
-    L →ₗ[R] decompositionOfSection ℳ p s i where
-  toFun x := if hi : i = 0 then ⟨x - s (p x), sub_mem_decompositionOfSection ℳ p hs hi⟩ +
+    L →ₗ[R] submoduleOfSection ℳ p s i where
+  toFun x := if hi : i = 0 then ⟨x - s (p x), sub_mem_submoduleOfSection ℳ p hs hi⟩ +
     ⟨s (component R ι (fun i ↦ ℳ i) i (decompose ℳ (p x))),
-      section_component_mem_decompositionOfSection ℳ p i x⟩
+      section_component_mem_submoduleOfSection ℳ p i x⟩
   else ⟨s (component R ι (fun i ↦ ℳ i) i (decompose ℳ (p x))),
-    section_component_mem_decompositionOfSection ℳ p i x⟩
+    section_component_mem_submoduleOfSection ℳ p i x⟩
   map_add' _ _ := by
     by_cases hi : i = 0
     · simp [hi]
@@ -103,10 +172,10 @@ def toDecompositionOfSection {p : L →ₗ[R] M} [DecidableEq ι] [Decomposition
 lemma toDecompositionOfSection_apply_zero [DecidableEq ι] [Decomposition ℳ]
     {s : M →ₗ[R] L} (hs : Function.LeftInverse p s) (x : L) :
     toDecompositionOfSection ℳ 0 hs x =
-    (⟨x - s (p x), sub_mem_decompositionOfSection ℳ p hs rfl⟩ : decompositionOfSection ℳ p s 0) +
+    (⟨x - s (p x), sub_mem_submoduleOfSection ℳ p hs rfl⟩ : submoduleOfSection ℳ p s 0) +
     (⟨s (component R ι (fun i ↦ ℳ i) 0 (decompose ℳ (p x))),
-      section_component_mem_decompositionOfSection ℳ p 0 x⟩ :
-        decompositionOfSection ℳ p s 0) := by
+      section_component_mem_submoduleOfSection ℳ p 0 x⟩ :
+        submoduleOfSection ℳ p s 0) := by
   simp [toDecompositionOfSection]
 
 @[simp]
@@ -114,13 +183,13 @@ lemma toDecompositionOfSection_apply_of_ne [DecidableEq ι] [Decomposition ℳ] 
     (hi : i ≠ 0) {s : M →ₗ[R] L} (hs : Function.LeftInverse p s) (x : L) :
     toDecompositionOfSection ℳ i hs x =
     ⟨s (component R ι (fun i ↦ ℳ i) i (decompose ℳ (p x))),
-      section_component_mem_decompositionOfSection ℳ p i x⟩ := by
+      section_component_mem_submoduleOfSection ℳ p i x⟩ := by
   simp [hi, toDecompositionOfSection]
 
 lemma mk_toDecompositionOfSection_apply [DecidableEq ι] [Decomposition ℳ]
     [(i : ι) → (x : (ℳ i)) → Decidable (x ≠ 0)] {s : M →ₗ[R] L} (hs : Function.LeftInverse p s)
     (x : L) :
-    DirectSum.mk (fun i ↦ (decompositionOfSection ℳ p s i)) ((decompose ℳ (p x)).support ⊔ {0})
+    DirectSum.mk (fun i ↦ (submoduleOfSection ℳ p s i)) ((decompose ℳ (p x)).support ⊔ {0})
         (fun i ↦ (toDecompositionOfSection ℳ i hs x)) = ∑ i ∈ ((decompose ℳ (p x)).support ⊔ {0}),
           ((of _ i) (toDecompositionOfSection ℳ i hs x)) := by
   ext i
@@ -148,14 +217,15 @@ lemma mk_toDecompositionOfSection_apply [DecidableEq ι] [Decomposition ℳ]
       exact Finset.mem_insert_of_mem hi
     simp only [DFinsupp.mem_support_toFun, ne_eq, not_not] at his
     simp [toDecompositionOfSection, hi0, ← apply_eq_component, his]
+
 /-
-noncomputable instance [DecidableEq ι] [Decomposition ℳ] {s : M →ₗ[R] L}
+noncomputable def ofSection [DecidableEq ι] [Decomposition ℳ] (s : M →ₗ[R] L)
     (hs : Function.LeftInverse p s) :
-    Decomposition (fun i ↦ decompositionOfSection ℳ p s i) := by
-  refine ofLinearMap (fun i ↦ decompositionOfSection ℳ p s i) ?_ ?_ ?_
+    Decomposition (fun i ↦ submoduleOfSection ℳ p s i) := by
+  refine ofLinearMap (fun i ↦ submoduleOfSection ℳ p s i) ?_ ?_ ?_
   · letI _ (i : ι) (x : ℳ i) := Classical.propDecidable (x ≠ 0)
     exact {
-      toFun x := DirectSum.mk (fun i ↦ (decompositionOfSection ℳ p s i))
+      toFun x := DirectSum.mk (fun i ↦ (submoduleOfSection ℳ p s i))
         ((decompose ℳ (p x)).support ⊔ {0}) (fun i ↦ (toDecompositionOfSection ℳ i hs x))
       map_add' x y := by
         ext i
