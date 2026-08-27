@@ -6,6 +6,7 @@ Authors: Scott Carnahan
 module
 
 public import Mathlib.RingTheory.HahnSeries.Binomial
+public import Mathlib.Algebra.MonoidAlgebra.PointwiseSMul
 public import VertexAlg.GroupActionEquiv
 public import VertexAlg.toMathlib.NegOnePow
 public import VertexAlg.toMathlib.PointwiseSMul
@@ -509,7 +510,6 @@ end HahnModule
 namespace HahnSeries
 
 /-- An algebra homomorphism from `AddMonoidAlgebra` -/
-@[simps]
 def ofAddMonoidAlgebra [PartialOrder Γ] [AddCancelCommMonoid Γ] [IsOrderedCancelAddMonoid Γ]
     [CommSemiring R] :
     AddMonoidAlgebra R Γ →ₐ[R] HahnSeries Γ R where
@@ -533,11 +533,26 @@ def ofAddMonoidAlgebra [PartialOrder Γ] [AddCancelCommMonoid Γ] [IsOrderedCanc
     · simp [h, algebraMap_apply]
     · simp [algebraMap_apply, coeff_single_of_ne h]
 
+lemma ofAddMonoidAlgebra_apply [PartialOrder Γ] [AddCancelCommMonoid Γ] [IsOrderedCancelAddMonoid Γ]
+    [CommSemiring R] (x : AddMonoidAlgebra R Γ) :
+    ofAddMonoidAlgebra x = ofFinsupp x.coeff :=
+  rfl
+
 end HahnSeries
 
 namespace HahnModule
 
+variable [PartialOrder Γ] [PartialOrder Γ₁] [AddCancelCommMonoid Γ] [IsOrderedCancelAddMonoid Γ]
+  [AddAction Γ Γ₁] [IsOrderedCancelVAdd Γ Γ₁] [CommSemiring R] [AddCommMonoid V] [Module R V]
+  [AddCommMonoid U] [Module R U]
 
+open MonoidAlgebra in
+lemma coeff_ofAddMonoidAlgebra_smul (a : AddMonoidAlgebra R Γ) (x : HahnModule Γ₁ R V) :
+    ((of R).symm ((HahnSeries.ofAddMonoidAlgebra a) • x)).coeff = a • ((of R).symm x).coeff := by
+  ext g
+  rw [coeff_smul, HahnSeries.ofAddMonoidAlgebra_apply, HahnSeries.coeff_ofFinsupp',
+    AddMonoidAlgebra.smul_eq, Finset.sum_congr _ (fun _ _ ↦ rfl)]
+  ext; simp
 
 end HahnModule
 
@@ -613,7 +628,7 @@ variable [PartialOrder Γ] [AddCommMonoid Γ] [IsOrderedCancelAddMonoid Γ]
 
 /-- An invertible Hahn series supported at an additive unit. -/
 @[simps]
-noncomputable def UnitSingle [Semiring R] {g : Γ} (hg : IsAddUnit g) {r : R} (hr : IsUnit r) :
+noncomputable def unitSingle [Semiring R] {g : Γ} (hg : IsAddUnit g) {r : R} (hr : IsUnit r) :
     (HahnSeries Γ R)ˣ where
   val := single g r
   inv := single hg.addUnit.neg hr.unit.inv
@@ -802,10 +817,9 @@ theorem pi_PWO_iUnion_support [AddCommMonoid Γ] [PartialOrder Γ] [IsOrderedCan
 
 open Classical in
 /-- delete this? -/
-theorem cosupp_subset_iunion_cosupp_left [AddCommMonoid Γ] [PartialOrder Γ] [PartialOrder Γ₁]
-    [VAdd Γ Γ₁] [IsOrderedCancelVAdd Γ Γ₁] [IsOrderedCancelAddMonoid Γ] [AddCommMonoid R]
-    [AddCommMonoid V] (s : SummableFamily Γ R α)
-    (t : SummableFamily Γ₁ V β) (g : Γ₁) {gh : Γ × Γ₁}
+theorem cosupp_subset_iunion_cosupp_left [PartialOrder Γ] [PartialOrder Γ₁]
+    [VAdd Γ Γ₁] [IsOrderedCancelVAdd Γ Γ₁] [AddCommMonoid R] [AddCommMonoid V]
+    (s : SummableFamily Γ R α) (t : SummableFamily Γ₁ V β) (g : Γ₁) {gh : Γ × Γ₁}
     (hgh : gh ∈ VAddAntidiagonal g (Set.VAddAntidiagonal.finite_of_isPWO s.isPWO_iUnion_support
       t.isPWO_iUnion_support g)) :
     Set.Finite.toFinset (s.finite_co_support (gh.1)) ⊆
@@ -972,7 +986,7 @@ theorem pi_PWO_iUnion_support_Fintype {R} [CommSemiring R] (α : σ → Type*)
 open Classical in
 /-- The equivalence between a pi type over a fintype and a pi type on `univ`. -/
 @[simps]
-def univ_equiv (α : σ → Type*) :
+def univEquiv (α : σ → Type*) :
     ((i : σ) → α i) ≃ ((i : σ) → i ∈ Finset.univ → α i) where
   toFun a := fun i _ ↦ a i
   invFun a := fun i ↦ a i (Finset.mem_univ i)
@@ -980,21 +994,21 @@ def univ_equiv (α : σ → Type*) :
   right_inv := congrFun rfl
 
 open Classical in
-theorem univ_equiv_Family {R} [CommSemiring R] (α : σ → Type*) (g : Γ)
+theorem univEquivFamily {R} [CommSemiring R] (α : σ → Type*) (g : Γ)
     {t : Π i : σ, (α i) → HahnSeries Γ R} (a : (i : σ) → α i) :
     a ∈ {a : (i : σ) → α i | (∏ i, (t i) (a i)).coeff g ≠ 0} ↔
-      univ_equiv α a ∈ {a : (i : σ) → i ∈ Finset.univ → α i |
+      univEquiv α a ∈ {a : (i : σ) → i ∈ Finset.univ → α i |
         (∏ i, (t i) (a i (Finset.mem_univ i))).coeff g ≠ 0} := by
   simp_all
 
 /-- The equivalence between a pi-parametrized family and the corresponding finset-parametrized
 family. -/
-def univ_equiv_Hahn {R} [CommSemiring R] (α : σ → Type*) (g : Γ)
+def univEquivHahn {R} [CommSemiring R] (α : σ → Type*) (g : Γ)
     {t : Π i : σ, (α i) → HahnSeries Γ R} :
     {a : (i : σ) → α i | (∏ i, (t i) (a i)).coeff g ≠ 0} ≃
     {a : (i : σ) → i ∈ Finset.univ → α i | (∏ i, (t i) (a i (Finset.mem_univ i))).coeff g ≠ 0} where
-  toFun a := ⟨univ_equiv α a, (univ_equiv_Family α g a).mp (Subtype.coe_prop a)⟩
-  invFun a := ⟨(univ_equiv α).symm a, (univ_equiv_Family α g _).mpr (by simp)⟩
+  toFun a := ⟨univEquiv α a, (univEquivFamily α g a).mp (Subtype.coe_prop a)⟩
+  invFun a := ⟨(univEquiv α).symm a, (univEquivFamily α g _).mpr (by simp)⟩
   left_inv a := by simp
   right_inv a := by simp
 /-!
@@ -1153,7 +1167,7 @@ lemma supp_eq_univ_of_pos (σ : Type*) (y : σ →₀ HahnSeries Γ R)
 
 /-- A finsupp whose every element has positive order has fintype source. -/
 @[reducible]
-noncomputable def Fintype_of_pos_order (σ : Type*) (y : σ →₀ HahnSeries Γ R)
+noncomputable def FintypeOfPosOrder (σ : Type*) (y : σ →₀ HahnSeries Γ R)
     (hy : ∀ i : σ, 0 < (y i).order) : Fintype σ := by
   refine Set.fintypeOfFiniteUniv ?_
   rw [← supp_eq_univ_of_pos σ y hy]
@@ -1225,7 +1239,7 @@ variable [LinearOrder Γ] [AddCommMonoid Γ] [IsOrderedCancelAddMonoid Γ] [Comm
 -- see also Finsupp.restrictSupportEquiv
 
 /-- An equiv between finsupp and maps from a finset. -/
-noncomputable def equiv_map_on_finset_finsupp (s : Finset σ) :
+noncomputable def equivMapOnFinsetFinsupp (s : Finset σ) :
     ((i : σ) → i ∈ s → ℕ) ≃ ({i // i ∈ s} →₀ ℕ) where
   toFun f := Finsupp.equivFunOnFinite.symm (fun i => f i.1 i.2)
   invFun f := fun i hi => (Finsupp.equivFunOnFinite f) ⟨i, hi⟩
@@ -1233,7 +1247,7 @@ noncomputable def equiv_map_on_finset_finsupp (s : Finset σ) :
   right_inv f := by simp
 
 /-- The equivalence between maps on a finite totality and finitely supported functions. -/
-noncomputable def equiv_map_on_fintype_finsupp [Fintype σ] :
+noncomputable def equivMapOnFintypeFinsupp [Fintype σ] :
     ((i : σ) → i ∈ Finset.univ → ℕ) ≃ (σ →₀ ℕ) where
   toFun f := Finsupp.equivFunOnFinite.symm (fun i => f i (mem_univ i))
   invFun f := fun i _ => (Finsupp.equivFunOnFinite f) i
@@ -1243,14 +1257,14 @@ noncomputable def equiv_map_on_fintype_finsupp [Fintype σ] :
 /-- A multivariable family given by all possible unit-coefficient monomials -/
 noncomputable def mvPowers [Fintype σ] (y : σ →₀ HahnSeries Γ V) :
     SummableFamily Γ V (σ →₀ ℕ) :=
-  Equiv equiv_map_on_fintype_finsupp (PiFamily Finset.univ (fun _ => ℕ)
+  Equiv equivMapOnFintypeFinsupp (PiFamily Finset.univ (fun _ => ℕ)
     (fun i => powers (y i)))
 
 @[simp]
 theorem mvPowers_apply {σ : Type*} [Fintype σ] (y : σ →₀ HahnSeries Γ R)
     (hy : ∀ i, 0 < (y i).orderTop) (n : σ →₀ ℕ) :
     (mvPowers y) n = ∏ i, y i ^ n i := by
-  simp [mvPowers, equiv_map_on_fintype_finsupp, hy]
+  simp [mvPowers, equivMapOnFintypeFinsupp, hy]
 
 open Classical in
 theorem mvpow_finite_co_support {σ : Type*} [Fintype σ] (y : σ →₀ HahnSeries Γ R)
@@ -1322,7 +1336,7 @@ theorem mvPowerSeriesFamily_supp_subset {σ : Type*} [Fintype σ] (y : σ →₀
   convert he.choose_spec.2
   · exact Eq.symm (mvPowers_apply y hy n)
   · exact Eq.symm (mvPowers_apply y hy n)
-  · simp [mvPowers, equiv_map_on_fintype_finsupp]
+  · simp [mvPowers, equivMapOnFintypeFinsupp]
     congr 1
     funext i
     have h : he.choose.1 i + he.choose.2 i = n i := by
@@ -1512,31 +1526,31 @@ namespace MonoidAlgebra
 variable [Ring R]
 
 /-- A unit monomial minus a unit monomial. -/
-noncomputable def single_sub_single (g g' : Γ) : MonoidAlgebra R Γ := single g 1 - single g' 1
+noncomputable def singleSubSingle (g g' : Γ) : MonoidAlgebra R Γ := single g 1 - single g' 1
 
 @[simp]
-theorem single_sub_single_of_subsingleton [Subsingleton R] (g g' : Γ) :
-    single_sub_single g g' = (0 : MonoidAlgebra R Γ) :=
-  Subsingleton.eq_zero (single_sub_single g g')
+theorem singleSubSingle_of_subsingleton [Subsingleton R] (g g' : Γ) :
+    singleSubSingle g g' = (0 : MonoidAlgebra R Γ) :=
+  Subsingleton.eq_zero (singleSubSingle g g')
 
 @[simp]
-theorem single_sub_single_eq_zero_iff [Nontrivial R] (g g' : Γ) :
-    single_sub_single g g' = (0 : MonoidAlgebra R Γ) ↔ g = g' := by
-  refine ⟨?_, fun h ↦ (by simp [single_sub_single, h])⟩
+theorem singleSubSingle_eq_zero_iff [Nontrivial R] (g g' : Γ) :
+    singleSubSingle g g' = (0 : MonoidAlgebra R Γ) ↔ g = g' := by
+  refine ⟨?_, fun h ↦ (by simp [singleSubSingle, h])⟩
   intro h
   by_contra hgg'
-  rw [single_sub_single, sub_eq_zero, MonoidAlgebra.ext_iff, Finsupp.ext_iff] at h
+  rw [singleSubSingle, sub_eq_zero, MonoidAlgebra.ext_iff, Finsupp.ext_iff] at h
   simpa [Ne.symm hgg'] using h g
 
-theorem single_sub_single_neg (g g' : Γ) :
-    - single_sub_single g g' (R := R) = single_sub_single g' g := by
-  simp [single_sub_single]
+theorem singleSubSingle_neg (g g' : Γ) :
+    - singleSubSingle g g' (R := R) = singleSubSingle g' g := by
+  simp [singleSubSingle]
 
 open Finset in
-theorem single_sub_single_pow [CommMonoid Γ] (g g' : Γ) (n : ℕ) :
-    (single_sub_single g g' (R := R)) ^ n = ∑ i ∈ antidiagonal n,
+theorem singleSubSingle_pow [CommMonoid Γ] (g g' : Γ) (n : ℕ) :
+    (singleSubSingle g g' (R := R)) ^ n = ∑ i ∈ antidiagonal n,
       Int.negOnePow (i.2) • n.choose (i.1) • single (g ^ (i.1) * g' ^ i.2) 1 := by
-  rw [single_sub_single, Ring.sub_eq_add_neg, Commute.add_pow']
+  rw [singleSubSingle, Ring.sub_eq_add_neg, Commute.add_pow']
   · refine sum_congr rfl ?_
     intro i hi
     rw [← Int.negOnePow_smul_pow, mul_smul_comm, single_pow, one_pow, single_pow, single_mul_single,
@@ -1606,7 +1620,7 @@ theorem binomialPow_one {g g' : Γ} (h : g < g') :
     add_sub_cancel, sub_eq_add_neg]
 
 /-needs new Mathlib
-theorem ofAddMonoidAlgebra_single_sub_single {g g' : Γ} (h : g < g') :
+theorem ofAddMonoidAlgebra_singleSubSingle {g g' : Γ} (h : g < g') :
     ofAddMonoidAlgebra (AddMonoidAlgebra.single g (1 : A) - AddMonoidAlgebra.single g' 1) =
       binomialPow A g g' (Nat.cast (R := R) 1) := by
   rw [binomialPow_one A h, map_sub]
@@ -1771,13 +1785,13 @@ theorem one_sub_single_negSuccPow_coeff {g : Γ} (hg : 0 < g) (r : R) (n k : ℕ
 noncomputable def UnitBinomial {g g' : Γ} (hg : IsAddUnit g) (hgg' : g < g') {a : R} (ha : IsUnit a)
     (b : R) :
     (HahnSeries Γ R)ˣ :=
-  (UnitSingle hg ha) *
+  (unitSingle hg ha) *
     IsUnit.unit (isUnit_one_sub_single (pos_addUnit_neg_add hg hgg') (ha.unit.inv * -b))
 
 theorem unitBinomial_eq_single_add_single {g g' : Γ} {hg : IsAddUnit g} {hgg' : g < g'} {a : R}
     {ha : IsUnit a} {b : R} : UnitBinomial hg hgg' ha b = single g a + single g' b := by
   simp only [UnitBinomial, AddUnits.neg_eq_val_neg, Units.inv_eq_val_inv, Units.val_mul,
-    val_UnitSingle, IsUnit.unit_spec, mul_sub, mul_one, single_mul_single]
+    val_unitSingle, IsUnit.unit_spec, mul_sub, mul_one, single_mul_single]
   rw [← add_assoc, IsAddUnit.add_val_neg, zero_add, ← mul_assoc, IsUnit.mul_val_inv, one_mul,
     sub_eq_iff_eq_add, add_assoc, ← single_add, add_neg_cancel, single_eq_zero, add_zero]
 

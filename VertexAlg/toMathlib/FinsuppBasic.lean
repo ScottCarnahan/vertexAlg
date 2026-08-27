@@ -16,6 +16,6 @@ remove when merged
 @[to_additive]
 theorem Finsupp.prod_eq_one {α M N : Type*} [Zero M] [CommMonoid N] {f : α →₀ M}
     {g : α → M → N} (h₀ : ∀ b, f b ≠ 0 → g b (f b) = 1) :
-    f.prod g = 1 := by
-  exact Finset.prod_eq_one fun b hb ↦ h₀ b (Finsupp.mem_support_iff.mp hb)
+    f.prod g = 1 :=
+  Finset.prod_eq_one fun b hb ↦ h₀ b (Finsupp.mem_support_iff.mp hb)
 --#find_home! Finsupp.prod_eq_one --[Mathlib.Algebra.BigOperators.Finsupp.Basic]

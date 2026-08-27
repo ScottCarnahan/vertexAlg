@@ -6,10 +6,11 @@ Authors: Scott Carnahan
 module
 
 public import Mathlib.Algebra.MonoidAlgebra.PointwiseSMul
-public import Mathlib.Data.Finsupp.PointwiseSMul
+--public import Mathlib.Data.Finsupp.PointwiseSMul
 
 /-!
-Remove this file when the new version of Mathlib hits.
+Put this stuff in Mathlib.Algebra.MonoidAlgebra.PointwiseSMul
+Remove this file when the PR is merged and the repository is updated.
 -/
 
 @[expose] public section
@@ -44,7 +45,6 @@ theorem mem_smulAntidiagonal_iff [SMul G P] [IsLeftCancelSMul G P] [Semiring R] 
     gh ∈ smulAntidiagonal f x p ↔ f.coeff gh.1 ≠ 0 ∧ x gh.2 ≠ 0 ∧ gh.1 • gh.2 = p := by
   simp [smulAntidiagonal]
 
-set_option backward.isDefEq.respectTransparency false in
 @[to_additive (dont_translate := R) smul_eq_addMonoidAlgebra_mul]
 theorem smul_eq_MonoidAlgebra_mul [Semiring R] [CancelMonoid G] (a b : MonoidAlgebra R G) :
     a • (b.coeff : G → R) = (a * b).coeff := by

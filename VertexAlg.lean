@@ -15,6 +15,7 @@ import VertexAlg.Lie.Cocycle
 import VertexAlg.Lie.Extension
 import VertexAlg.Lie.Graded
 import VertexAlg.Lie.Loop
+import VertexAlg.Lie.PBW
 import VertexAlg.OrderAddTorsor
 import VertexAlg.TensorProductDecomposition
 import VertexAlg.VertexBasic.Affine
