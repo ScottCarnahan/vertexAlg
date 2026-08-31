@@ -19,7 +19,7 @@ import VertexAlg.Lie.PBW
 import VertexAlg.OrderAddTorsor
 import VertexAlg.TensorProductDecomposition
 import VertexAlg.VertexBasic.Affine
-import VertexAlg.VertexBasic.Basic
+import VertexAlg.VertexBasic.Borcherds
 import VertexAlg.VertexBasic.Defs
 import VertexAlg.VertexBasic.HVertexOperator
 import VertexAlg.VertexBasic.Lattice

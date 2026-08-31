@@ -17,14 +17,13 @@ Borcherds identity that defines vertex algebras is introduced in pieces for easi
 ## Definitions
  * `VertexAlg.stateField` : This is the left-multiplication structure in a vertex algebra, sometimes
    called a state-field correspondence. It is fundamentally a linear map `V →ₗ[R] V →ₗ[R] V((z))`.
- * Borcherds identity sums: These are composites of vertex operators multiplied by binomial powers.
  * Various identities: Borcherds, commutator, locality, associativity, skew-symmetry.
  * VertexAlgebra: An `AddCommGroupWithOne` with a `stateField`, satisfying associativity and
    locality.
 ## Main results
 We postpone the proofs of equivalences of various identities to Mathlib.Algebra.Vertex.Basic.
 ## To do:
-* Refactor: remove non-unital non-associative vertex algebra.  Introduce Y by itself.
+* Refactor: Make the `Y` notation easier to use.
 * Use formal series more, instead of combinatorial coefficient calculations.
 * order of associativity, weak associativity
 * Fix weak associativity defs
@@ -34,10 +33,11 @@ We postpone the proofs of equivalences of various identities to Mathlib.Algebra.
   operator `L(0)`, such that translation has degree `-1` and the unit has degree `0`.
   * `Mobius`: A class for vertex algebras with `sl2`-action, extending the grading by a `L(1)`
   operator.
-  * `QuasiConformal`: A class for an action of Der 𝒪.
+  * `QuasiConformal`: A class for an action of the Lie algebra Der 𝒪.
   * `Conformal`: A class for an internal Virasoro action given by a conformal element.
-  * `Gauged` ??
+  * `Gauged`: Affine Lie symmetry?
 ## References
+R. Borcherds `Vertex algebras, Kac-Moody algebras, and the monster` PNAS 1986
 G. Mason `Vertex rings and Pierce bundles` ArXiv 1707.00328
 A. Matsuo, K. Nagatomo `On axioms for a vertex algebra and locality of quantum fields`
 arXiv:hep-th/9706118
@@ -51,13 +51,6 @@ abbrev stateField (R V : Type*) [CommRing R] [AddCommGroup V] [Module R V] :=
 
 namespace stateField
 
-/-! A non-associative non-unital vertex algebra over a commutative ring `R` is an `R`-module `V`
-with a multiplication that takes values in Laurent series with coefficients in `V`.
-class NonAssocNonUnitalVertexAlgebra (R : Type*) (V : Type*) [CommRing R] [AddCommGroup V] extends
-    Module R V where
-  /-- The multiplication operation in a vertex algebra. -/
-  Y: V →ₗ[R] VertexOperator R V
--/
 open HVertexOperator VertexOperator
 
 variable {R : Type*} {V : Type*} [CommRing R] [AddCommGroup V] [Module R V] (Y : stateField R V)
@@ -104,63 +97,37 @@ theorem ncoeff_smul_left_eq (r : R) (a b : V) (n : ℤ) :
 zero otherwise.  In particular, `a [[n]] b = 0` for `n ≥ -order a b`. -/
 noncomputable def order (a b : V) : ℤ := HahnSeries.order ((HahnModule.of R).symm (Y a b))
 
-theorem coeff_zero_if_lt_order (a b : V) (n : ℤ) (h : n < Y.order a b) :
+theorem coeff_eq_zero_of_lt_order (a b : V) (n : ℤ) (h : n < Y.order a b) :
     HVertexOperator.coeff (Y a) n b = 0 := by
   rw [order] at h
   simp only [HVertexOperator.coeff, LinearMap.coe_mk, AddHom.coe_mk]
   exact HahnSeries.coeff_eq_zero_of_lt_order h
 
-theorem coeff_nonzero_at_order (a b : V) (h : Y a b ≠ 0) :
+theorem coeff_ne_zero_at_order (a b : V) (h : Y a b ≠ 0) :
     HVertexOperator.coeff (Y a) (Y.order a b) b ≠ 0 :=
   HahnSeries.coeff_order_eq_zero.not.mpr h
 
 theorem ncoeff_zero_if_neg_order_leq (a b : V) (n : ℤ) (h : -Y.order a b ≤ n) :
     (Y a).ncoeff n b = 0 := by
   rw [ncoeff]
-  refine coeff_zero_if_lt_order Y a b (-n-1) ?_
+  refine coeff_eq_zero_of_lt_order Y a b (-n-1) ?_
   rw [Int.sub_one_lt_iff, neg_le]
   exact h
 
-theorem ncoeff_nonzero_at_neg_order_minus_one (a b : V) (h : Y a b ≠ 0) :
+theorem ncoeff_ne_zero_at_neg_order_minus_one (a b : V) (h : Y a b ≠ 0) :
     (Y a).ncoeff (-Y.order a b - 1) b ≠ 0 := by
   dsimp [ncoeff]
   rw [neg_sub, sub_neg_eq_add, add_sub_cancel_left]
-  exact coeff_nonzero_at_order Y a b h
+  exact coeff_ne_zero_at_order Y a b h
 
 -- Reminder: a (t + i) b = 0 for i ≥ -t - (order a b)
-
-/-- The first sum in the Borcherds identity, giving the `x^t z^s` coefficient of
-`x^r (1 + z/x)^r (a(x)b)(z)c`. -/
-noncomputable def borcherdsSum1 (a b c : V) (r s t : ℤ) : V :=
-  Finset.sum (Finset.range (Int.toNat (-t - order Y a b)))
-    (fun i ↦ (Ring.choose r i) • ncoeff (Y (ncoeff (Y a) (t+i) b)) (r+s-i) c)
-
-/-- The second sum in the Borcherds identity, giving the `y^r z^s` coefficient of
-`y^t (1 - z/y)^t a(y)b(z)c`. -/
-noncomputable def borcherdsSum2 (a b c : V) (r s t : ℤ) : V :=
-  Finset.sum (Finset.range (Int.toNat (-s - order Y b c)))
-    (fun i ↦ (-1)^i • (Ring.choose t i) • ncoeff (Y a) (r+t-i)
-    (ncoeff (Y b) (s+i) c))
-
-/-- The third sum in the Borcherds identity, giving the `y^r z^s` coefficient of
-`-(-y)^t (1 - y/z)^t b(z)a(y)c`. -/
-noncomputable def borcherdsSum3 (a b c : V) (r s t : ℤ) : V :=
-  Finset.sum (Finset.range (Int.toNat (-r - order Y a c)))
-    (fun i ↦ (-1: ℤˣ)^(t+i+1) • (Ring.choose t i) • ncoeff (Y b) (s+t-i)
-    (ncoeff (Y a) (r+i) c))
-
-/-- The Borcherds identity, also called the Jacobi identity or Cauchy-Jacobi identity when put in
-power-series form.  It is a formal distribution analogue of the combination of commutativity and
-associativity. -/
-noncomputable def borcherdsId (a b c : V) (r s t : ℤ) : Prop :=
-  borcherdsSum1 Y a b c r s t = borcherdsSum2 Y a b c r s t + borcherdsSum3 Y a b c r s t
 
 /-- The associativity property of vertex algebras. -/
 def associativity (a b c : V) (s t : ℤ) : Prop :=
   ncoeff (Y (ncoeff (Y a) t b)) s c = Finset.sum (Finset.range
     (Int.toNat (-s - order Y b c))) (fun i ↦ (-1)^i • (Ring.choose (t : ℤ)  i) •
     (ncoeff (Y a) (t-i) (ncoeff (Y b) (s+i) c))) + Finset.sum (Finset.range (Int.toNat
-    (- order Y a c))) (fun i ↦ (-1: ℤˣ)^(t+i+1) • (Ring.choose t i) • ncoeff (Y b) (s+t-i)
+    (- order Y a c))) (fun i ↦ (t+i+1).negOnePow • (Ring.choose t i) • ncoeff (Y b) (s+t-i)
     (ncoeff (Y a) i c))
 
 /-- The commutator formula for vertex algebras. -/
@@ -178,25 +145,12 @@ def IsLocal (a b : V) : Prop :=
 -- was borcherdsSum2 R a b c r s t + borcherdsSum3 R a b c r s t = 0
 -- weak associativity needs to be changed to the vertex operator definition.
 -/
-/-- The weak associativity property for vertex algebras. -/
-def weakAssociativity (a b c : V) (r s t : ℤ) : Prop :=
-  borcherdsSum1 Y a b c r s t = borcherdsSum2 Y a b c r s t
 
 section Unital
 
 open HVertexOperator VertexOperator
 
 variable {R : Type*} {V : Type*} [CommRing R] [AddCommGroupWithOne V] [Module R V]
-
-/-- A field is creative with respect to the unit vector `1` if evaluating at `1` yields a regular
-series. -/
-def IsCreative (A : VertexOperator R V) : Prop :=
-  0 ≤ ((HahnModule.of R).symm (A 1)).order
-
-/-- The state attached to a creative field is its `z^0`-coefficient at `1`. We omit the creative
-hypothesis. -/
-def state (A : VertexOperator R V) : V :=
-  A.ncoeff (-1 : ℤ) 1
 
 /-- A divided-power system of translation operators.  `T 1` is often written `T`. -/
 def T (Y : stateField R V) (n : ℕ) : Module.End R V where
@@ -207,14 +161,14 @@ def T (Y : stateField R V) (n : ℕ) : Module.End R V where
 /-- The skew-symmetry property for vertex algebras: `Y(u,z)v = exp(Tz)Y(v,-z)u`. -/
 def skewSymmetry (Y : stateField R V) (a b : V) (n : ℤ) : Prop :=
   ncoeff (Y b) n a = Finset.sum (Finset.range (Int.toNat (-n - order Y a b)))
-    (fun i ↦ (-1:ℤˣ)^(n + i + 1) • T Y i (ncoeff (Y a) (n+i) b))
+    (fun i ↦ (n + i + 1).negOnePow • T Y i (ncoeff (Y a) (n+i) b))
 
 /-- A field is translation covariant with respect to a divided-power system of endomorphisms that
 stabilizes identity if left translation satisfies the Leibniz rule.  We omit conditions on `f`. -/
 def translationCovariance (Y : stateField R V) (A : VertexOperator R V) (f : ℕ → Module.End R V) :
     Prop :=
   ∀ (i : ℕ) (n : ℤ), f i * HVertexOperator.coeff A n =
-    Finset.sum (Finset.HasAntidiagonal.antidiagonal i) fun m => (-1 : ℤˣ) ^ m.fst •
+    Finset.sum (Finset.HasAntidiagonal.antidiagonal i) fun m => (Int.negOnePow m.fst) •
       Ring.choose n m.fst • (HVertexOperator.coeff A (n - m.fst) * T Y m.snd)
 -- This is clearly wrong. Why does `Y` not appear on the left side???
 
@@ -236,20 +190,7 @@ open HVertexOperator VertexOperator stateField
 /-- A vertex algebra over a commutative ring `R` is an `R`-module `V` with a distinguished unit
 element `1`, together with a multiplication operation that takes values in Laurent series with
 coefficients in `V`, such that `a(z) 1 ∈ a + zV[[z]]` for all `a ∈ V` -/
-class VertexAlgebra1 (R V : Type*) [CommRing R] [AddCommGroupWithOne V] extends Module R V where
-  /-- The multiplication operation. -/
-  Y : stateField R V
-  /-- The Borcherds identity holds. -/
-  borcherdsId : ∀ (a b c : V) (r s t : ℤ), borcherdsId Y a b c r s t
-  /-- Right multiplication by the unit vector is nonsingular. -/
-  unit_comm : ∀ (a : V), order Y a 1 = 0
-  /-- The constant coefficient of right multiplication by the unit vector is identity. -/
-  unit_right : ∀ (a : V), coeff (Y a) 0 1 = a
-
-/-- A vertex algebra over a commutative ring `R` is an `R`-module `V` with a distinguished unit
-element `1`, together with a multiplication operation that takes values in Laurent series with
-coefficients in `V`, such that `a(z) 1 ∈ a + zV[[z]]` for all `a ∈ V` -/
-class VertexAlgebra2 (R V : Type*) [CommRing R] [AddCommGroupWithOne V] extends Module R V where
+class VertexAlgebra (R V : Type*) [CommRing R] [AddCommGroupWithOne V] extends Module R V where
   /-- The multiplication operation. -/
   Y : stateField R V
   /-- Any pair of fields are mutually local. -/
@@ -261,16 +202,16 @@ class VertexAlgebra2 (R V : Type*) [CommRing R] [AddCommGroupWithOne V] extends 
   /-- The constant coefficient of right multiplication by the unit vector is identity. -/
   unit_right : ∀ (a : V), ((Y a)[[-1]]) 1 = a
 
-lemma apply_nat_unit {R V : Type*} [CommRing R] [AddCommGroupWithOne V] [VertexAlgebra2 R V] (v : V)
+lemma apply_nat_unit {R V : Type*} [CommRing R] [AddCommGroupWithOne V] [VertexAlgebra R V] (v : V)
     {k : ℤ} (hk : 0 ≤ k) :
-    ((VertexAlgebra2.Y (R := R) v)[[k]]) (1 : V) = 0 :=
-  ncoeff_zero_if_neg_order_leq VertexAlgebra2.Y v 1 k
-    (by simp [VertexAlgebra2.unit_comm (R := R) v, hk])
+    ((VertexAlgebra.Y (R := R) v)[[k]]) (1 : V) = 0 :=
+  ncoeff_zero_if_neg_order_leq VertexAlgebra.Y v 1 k
+    (by simp [VertexAlgebra.unit_comm (R := R) v, hk])
 
-open VertexAlgebra2 in
+open VertexAlgebra in
 /-- A homomorphism of vertex algebras is a linear map that preserves the unit and products. -/
-structure vertexAlgebra2Hom (R V W : Type*) [CommRing R] [AddCommGroupWithOne V]
-    [AddCommGroupWithOne W] [VertexAlgebra2 R V] [VertexAlgebra2 R W] where
+structure VertexAlgebraHom (R V W : Type*) [CommRing R] [AddCommGroupWithOne V]
+    [AddCommGroupWithOne W] [VertexAlgebra R V] [VertexAlgebra R W] where
   /-- The underlying linear map. -/
   toLinearMap : V →ₗ[R] W
   /-- Vertex algebra homomorphisms preserve units -/
@@ -281,10 +222,10 @@ structure vertexAlgebra2Hom (R V W : Type*) [CommRing R] [AddCommGroupWithOne V]
 
 /-- The Poisson kernel of a vertex algebra, which typically appears in the literature as the
 subspace `C₂(V)`. -/
-def poissonKernel (R V : Type*) [CommRing R] [AddCommGroupWithOne V] [VertexAlgebra2 R V] :
+def poissonKernel (R V : Type*) [CommRing R] [AddCommGroupWithOne V] [VertexAlgebra R V] :
     Submodule R V :=
   Submodule.span R
-    {w : V | ∃ (u v : V) (n : ℤ), n ≤ -2 ∧ (VertexAlgebra2.Y (R := R) u).ncoeff n v = w}
+    {w : V | ∃ (u v : V) (n : ℤ), n ≤ -2 ∧ (VertexAlgebra.Y (R := R) u).ncoeff n v = w}
 
 /-
 /-- The `Subgroup` generated by a set. -/
@@ -351,17 +292,17 @@ theorem closure_induction {p : (g : G) → g ∈ closure k → Prop}
 /-- A submodule is a vertex subalgebra if it contains the identity and is closed under all
 products. -/
 structure VertexSubalgebra (R : Type u) (V : Type v) [CommRing R] [AddCommGroupWithOne V]
-    [VertexAlgebra2 R V] : Type v extends Submodule R V where
+    [VertexAlgebra R V] : Type v extends Submodule R V where
   one_mem' : 1 ∈ carrier
   mul_mem' {a b : V} (ha : a ∈ carrier) (hb : b ∈ carrier) (n : ℤ) :
-      (VertexAlgebra2.Y (R := R) a).ncoeff n b ∈ carrier
+      (VertexAlgebra.Y (R := R) a).ncoeff n b ∈ carrier
 
 /-- Reinterpret a `VertexSubalgebra` as a `Submodule`. -/
 add_decl_doc VertexSubalgebra.toSubmodule
 
 namespace VertexSubalgebra
 
-variable (R : Type u) (V : Type v) [CommRing R] [AddCommGroupWithOne V] [VertexAlgebra2 R V]
+variable (R : Type u) (V : Type v) [CommRing R] [AddCommGroupWithOne V] [VertexAlgebra R V]
 
 instance : SetLike (VertexSubalgebra R V) V where
   coe s := s.carrier
@@ -391,7 +332,7 @@ instance : Bot (VertexSubalgebra R V) :=
     simp only [Submodule.carrier_eq_coe, map_smul, Pi.smul_apply, LinearMap.smul_apply,
       SetLike.mem_coe, smul_smul]
     by_cases h : n = -1
-    · simp [h, VertexAlgebra2.unit_right, Submodule.mem_span_singleton]
+    · simp [h, VertexAlgebra.unit_right, Submodule.mem_span_singleton]
     · sorry
     ⟩⟩
 
@@ -421,7 +362,7 @@ theorem mem_sInf {S : Set (Subsemiring R)} {x : R} : x ∈ sInf S ↔ ∀ p ∈ 
 
 
 def closure (R : Type u) (V : Type v) [CommRing R] [AddCommGroupWithOne V]
-    [VertexAlgebra2 R V] (k : Set V) : VertexSubalgebra R V := sInf {U | k ⊆ U}
+    [VertexAlgebra R V] (k : Set V) : VertexSubalgebra R V := sInf {U | k ⊆ U}
 
 def ofGeneratingSet (R V : Type*) [CommRing R] [AddCommGroupWithOne V] [Module R V] {s : Set V}
     (hs : V = Submodule.span {w : V | ∃ })
@@ -429,17 +370,319 @@ def ofGeneratingSet (R V : Type*) [CommRing R] [AddCommGroupWithOne V] [Module R
 
 end VertexSubalgebra
 
-variable {R : Type*} {V : Type*} [CommRing R] [AddCommGroupWithOne V] [VertexAlgebra1 R V]
+/-- A morphism of vertex algebras (denoted as `U →ₗ[[R]] V`)
+is a linear map respecting the unit and product operations. -/
+structure VertexHom (R U V : Type*) [CommRing R] [AddCommGroupWithOne U] [VertexAlgebra R U]
+    [AddCommGroupWithOne V] [VertexAlgebra R V]
+  extends U →ₗ[R] V where
+  /-- A morphism of Vertex algebras is compatible with brackets. -/
+  map_vertex' : ∀ {a b : U} {n : ℤ}, toFun ((VertexAlgebra.Y (R := R) a).ncoeff n b) =
+    (VertexAlgebra.Y (R := R) (toFun a)).ncoeff n (toFun b)
 
-theorem borcherdsIdentity (a b c : V) (r s t : ℤ) :
-    borcherdsId VertexAlgebra1.Y (R := R) a b c r s t :=
-  VertexAlgebra1.borcherdsId a b c r s t
+@[inherit_doc]
+notation:25 U " →ₗ[[" R:25 "]] " V:0 => VertexHom R U V
 
-theorem unit_comm (a : V) : order VertexAlgebra1.Y (R := R) a 1 = 0 := VertexAlgebra1.unit_comm a
+namespace VertexHom
 
-theorem unit_right (a : V) : HVertexOperator.coeff (R := R) (VertexAlgebra1.Y a) 0 1 = a :=
-  VertexAlgebra1.unit_right a
+variable {R : Type u} {U : Type v} {V : Type w} {W : Type w₁}
+variable [CommRing R]
+variable [AddCommGroupWithOne U] [VertexAlgebra R U]
+variable [AddCommGroupWithOne V] [VertexAlgebra R V]
+variable [AddCommGroupWithOne W] [VertexAlgebra R W]
 
--- homs? cofiniteness?
+attribute [coe] VertexHom.toLinearMap
+
+instance : Coe (U →ₗ[[R]] V) (U →ₗ[R] V) :=
+  ⟨VertexHom.toLinearMap⟩
+
+instance : FunLike (U →ₗ[[R]] V) U V where
+  coe f := f.toFun
+  coe_injective x y h := by
+    cases x; cases y; simp at h; simp [h]
+
+initialize_simps_projections VertexHom (toFun → apply)
+
+@[simp, norm_cast]
+theorem coe_toLinearMap (f : U →ₗ[[R]] V) : ⇑(f : U →ₗ[R] V) = f :=
+  rfl
+
+@[simp]
+theorem toFun_eq_coe (f : U →ₗ[[R]] V) : f.toFun = ⇑f :=
+  rfl
+
+instance : LinearMapClass (U →ₗ[[R]] V) R U V where
+  map_add _ _ _ := by rw [← coe_toLinearMap, map_add]
+  map_smulₛₗ _ _ _ := by rw [← coe_toLinearMap, MulActionSemiHomClass.map_smulₛₗ]
+
+@[simp]
+theorem map_vertex (f : U →ₗ[[R]] V) (a b : U) (n : ℤ) :
+    f ((VertexAlgebra.Y (R := R) a).ncoeff n b) =
+      (VertexAlgebra.Y (R := R) (f a)).ncoeff n (f b) :=
+  VertexHom.map_vertex' f
+
+/-- The identity map is a morphism of vertex algebras. -/
+def id : U →ₗ[[R]] U :=
+  { (LinearMap.id : U →ₗ[R] U) with map_vertex' := rfl }
+
+@[simp, norm_cast]
+theorem coe_id : ⇑(id : U →ₗ[[R]] U) = _root_.id :=
+  rfl
+
+theorem id_apply (x : U) : (id : U →ₗ[[R]] U) x = x :=
+  rfl
+
+/-- The constant 0 map is a vertex algebra morphism. -/
+instance : Zero (U →ₗ[[R]] V) :=
+  ⟨{ (0 : U →ₗ[R] V) with map_vertex' := by simp }⟩
+
+@[norm_cast, simp]
+theorem coe_zero : ((0 : U →ₗ[[R]] V) : U → V) = 0 :=
+  rfl
+
+theorem zero_apply (x : U) : (0 : U →ₗ[[R]] V) x = 0 :=
+  rfl
+
+/-- The identity map is a Vertex algebra morphism. -/
+instance : One (U →ₗ[[R]] U) :=
+  ⟨id⟩
+
+@[simp]
+theorem coe_one : ((1 : U →ₗ[[R]] U) : U → U) = _root_.id :=
+  rfl
+
+theorem one_apply (x : U) : (1 : U →ₗ[[R]] U) x = x :=
+  rfl
+
+instance : Inhabited (U →ₗ[[R]] V) :=
+  ⟨0⟩
+
+theorem coe_injective : @Function.Injective (U →ₗ[[R]] V) (U → V) (↑) := by
+  rintro ⟨⟨⟨f, _⟩, _⟩, _⟩ ⟨⟨⟨g, _⟩, _⟩, _⟩ h
+  congr
+
+@[ext]
+theorem ext {f g : U →ₗ[[R]] V} (h : ∀ x, f x = g x) : f = g :=
+  coe_injective <| funext h
+
+theorem congr_fun {f g : U →ₗ[[R]] V} (h : f = g) (x : U) : f x = g x :=
+  h ▸ rfl
+
+@[simp]
+theorem mk_coe (f : U →ₗ[[R]] V) (h₁ h₂ h₃) : (⟨⟨⟨f, h₁⟩, h₂⟩, h₃⟩ : U →ₗ[[R]] V) = f := by
+  ext
+  rfl
+
+@[simp]
+theorem coe_mk (f : U → V) (h₁ h₂ h₃) : ((⟨⟨⟨f, h₁⟩, h₂⟩, h₃⟩ : U →ₗ[[R]] V) : U → V) = f :=
+  rfl
+
+/-- The composition of morphisms is a morphism. -/
+def comp (f : V →ₗ[[R]] W) (g : U →ₗ[[R]] V) : U →ₗ[[R]] W :=
+  { LinearMap.comp f.toLinearMap g.toLinearMap with
+    map_vertex' := by simp }
+
+theorem comp_apply (f : V →ₗ[[R]] W) (g : U →ₗ[[R]] V) (x : U) : f.comp g x = f (g x) :=
+  rfl
+
+@[norm_cast, simp]
+theorem coe_comp (f : V →ₗ[[R]] W) (g : U →ₗ[[R]] V) : (f.comp g : U → W) = f ∘ g :=
+  rfl
+
+@[norm_cast, simp]
+theorem toLinearMap_comp (f : V →ₗ[[R]] W) (g : U →ₗ[[R]] V) :
+    (f.comp g : U →ₗ[R] W) = (f : V →ₗ[R] W).comp (g : U →ₗ[R] V) :=
+  rfl
+
+@[simp]
+theorem comp_id (f : U →ₗ[[R]] V) : f.comp (id : U →ₗ[[R]] U) = f :=
+  rfl
+
+@[simp]
+theorem id_comp (f : U →ₗ[[R]] V) : (id : V →ₗ[[R]] V).comp f = f :=
+  rfl
+
+/-- The inverse of a bijective morphism is a morphism. -/
+def inverse (f : U →ₗ[[R]] V) (g : V → U) (h₁ : Function.LeftInverse g f)
+    (h₂ : Function.RightInverse g f) : V →ₗ[[R]] U :=
+  { LinearMap.inverse f.toLinearMap g h₁ h₂ with
+    map_vertex' := by
+      intro x y n
+      simp only [AddHom.toFun_eq_coe, LinearMap.coe_toAddHom]
+      nth_rw 1 [← h₂ x, ← h₂ y]
+      rw [← map_vertex]
+      apply h₁ }
+
+end VertexHom
+
+/-- An equivalence of vertex algebras (denoted as `U ≃ₗ[[R]] V`) is a morphism
+which is also a linear equivalence.
+We could instead define an equivalence to be a morphism which is also a (plain) equivalence.
+However, it is more convenient to define via linear equivalence to get `.toLinearEquiv` for free. -/
+structure VertexEquiv (R : Type u) (U : Type v) (V : Type w) [CommRing R] [AddCommGroupWithOne U]
+    [VertexAlgebra R U] [AddCommGroupWithOne V] [VertexAlgebra R V] extends U →ₗ[[R]] V where
+  /-- The inverse function of an equivalence of Vertex algebras -/
+  invFun : V → U
+  /-- The inverse function of an equivalence of Vertex algebras is a left inverse of the underlying
+  function. -/
+  left_inv : Function.LeftInverse invFun toVertexHom.toFun := by intro; first | rfl | ext <;> rfl
+  /-- The inverse function of an equivalence of Vertex algebras is a right inverse of the underlying
+  function. -/
+  right_inv : Function.RightInverse invFun toVertexHom.toFun := by intro; first | rfl | ext <;> rfl
+
+@[inherit_doc]
+notation:50 U " ≃ₗ[[" R "]] " V => VertexEquiv R U V
+
+namespace VertexEquiv
+
+variable {R : Type u} {U : Type v} {V : Type w} {L₃ : Type w₁}
+variable [CommRing R] [AddCommGroupWithOne U] [AddCommGroupWithOne V] [AddCommGroupWithOne W]
+  [VertexAlgebra R U] [VertexAlgebra R V] [VertexAlgebra R W]
+
+/-- Consider an equivalence of Vertex algebras as a linear equivalence. -/
+def toLinearEquiv (f : U ≃ₗ[[R]] V) : U ≃ₗ[R] V :=
+  { f.toVertexHom, f with }
+
+instance hasCoeToVertexHom : Coe (U ≃ₗ[[R]] V) (U →ₗ[[R]] V) :=
+  ⟨toVertexHom⟩
+
+instance hasCoeToLinearEquiv : Coe (U ≃ₗ[[R]] V) (U ≃ₗ[R] V) :=
+  ⟨toLinearEquiv⟩
+
+instance : EquivLike (U ≃ₗ[[R]] V) U V where
+  coe f := f.toFun
+  inv f := f.invFun
+  left_inv f := f.left_inv
+  right_inv f := f.right_inv
+  coe_injective' f g h₁ h₂ := by cases f; cases g; simp at h₁ h₂; simp [*]
+
+theorem coe_toVertexHom (e : U ≃ₗ[[R]] V) : ⇑(e : U →ₗ[[R]] V) = e :=
+  rfl
+
+@[simp]
+theorem coe_toLinearEquiv (e : U ≃ₗ[[R]] V) : ⇑(e : U ≃ₗ[R] V) = e :=
+  rfl
+
+@[simp] theorem coe_coe (e : U ≃ₗ[[R]] V) : ⇑e.toVertexHom = e := rfl
+
+@[simp]
+theorem toLinearEquiv_mk (f : U →ₗ[[R]] V) (g h₁ h₂) :
+    (mk f g h₁ h₂ : U ≃ₗ[R] V) =
+      { f with
+        invFun := g
+        left_inv := h₁
+        right_inv := h₂ } :=
+  rfl
+
+theorem toLinearEquiv_injective : Function.Injective ((↑) : (U ≃ₗ[[R]] V) → U ≃ₗ[R] V) := by
+  rintro ⟨⟨⟨⟨f, -⟩, -⟩, -⟩, f_inv⟩ ⟨⟨⟨⟨g, -⟩, -⟩, -⟩, g_inv⟩
+  simp
+
+theorem coe_injective : @Function.Injective (U ≃ₗ[[R]] V) (U → V) (↑) :=
+  LinearEquiv.coe_injective.comp toLinearEquiv_injective
+
+instance : LinearEquivClass (U ≃ₗ[[R]] V) R U V where
+  map_add _ _ _ := by
+    rw [← coe_toLinearEquiv, map_add]
+  map_smulₛₗ _ _ _ := by
+    rw [← coe_toLinearEquiv, map_smul, RingHom.id_apply]
+
+@[ext]
+theorem ext {f g : U ≃ₗ[[R]] V} (h : ∀ x, f x = g x) : f = g :=
+  coe_injective <| funext h
+
+instance : One (U ≃ₗ[[R]] U) :=
+  ⟨{ (1 : U ≃ₗ[R] U) with map_vertex' := rfl }⟩
+
+@[simp]
+theorem one_apply (x : U) : (1 : U ≃ₗ[[R]] U) x = x :=
+  rfl
+
+instance : Inhabited (U ≃ₗ[[R]] U) :=
+  ⟨1⟩
+
+lemma map_vertex (e : U ≃ₗ[[R]] V) (x y : U) (n : ℤ) :
+    e ((VertexAlgebra.Y (R := R) x).ncoeff n y) =
+      ((VertexAlgebra.Y (R := R) (e x)).ncoeff n (e y)) :=
+  VertexHom.map_vertex e.toVertexHom x y n
+
+/-- Vertex algebra equivalences are reflexive. -/
+def refl : U ≃ₗ[[R]] U :=
+  1
+
+@[simp]
+theorem refl_apply (x : U) : (refl : U ≃ₗ[[R]] U) x = x :=
+  rfl
+
+/-- Vertex algebra equivalences are symmetric. -/
+@[symm]
+def symm (e : U ≃ₗ[[R]] V) : V ≃ₗ[[R]] U :=
+  { VertexHom.inverse e.toVertexHom e.invFun e.left_inv e.right_inv, e.toLinearEquiv.symm with }
+
+@[simp]
+theorem symm_symm (e : U ≃ₗ[[R]] V) : e.symm.symm = e := rfl
+
+theorem symm_bijective : Function.Bijective (VertexEquiv.symm : (U ≃ₗ[[R]] V) → V ≃ₗ[[R]] U) :=
+  Function.bijective_iff_has_inverse.mpr ⟨_, symm_symm, symm_symm⟩
+
+@[simp]
+theorem apply_symm_apply (e : U ≃ₗ[[R]] V) : ∀ x, e (e.symm x) = x :=
+  e.toLinearEquiv.apply_symm_apply
+
+@[simp]
+theorem symm_apply_apply (e : U ≃ₗ[[R]] V) : ∀ x, e.symm (e x) = x :=
+  e.toLinearEquiv.symm_apply_apply
+
+theorem symm_apply_eq (e : U ≃ₗ[[R]] V) {x y} : e.symm x = y ↔ x = e y :=
+  e.toLinearEquiv.symm_apply_eq
+
+theorem eq_symm_apply (e : U ≃ₗ[[R]] V) {x y} : y = e.symm x ↔ e y = x :=
+  e.toLinearEquiv.eq_symm_apply
+
+@[simp]
+theorem refl_symm : (refl : U ≃ₗ[[R]] U).symm = refl :=
+  rfl
+
+/-- Vertex algebra equivalences are transitive. -/
+@[trans]
+def trans (e₁ : U ≃ₗ[[R]] V) (e₂ : V ≃ₗ[[R]] W) : U ≃ₗ[[R]] W :=
+  { VertexHom.comp e₂.toVertexHom e₁.toVertexHom,
+    LinearEquiv.trans e₁.toLinearEquiv e₂.toLinearEquiv with }
+
+@[simp]
+theorem self_trans_symm (e : U ≃ₗ[[R]] V) : e.trans e.symm = refl :=
+  ext e.symm_apply_apply
+
+@[simp]
+theorem symm_trans_self (e : U ≃ₗ[[R]] V) : e.symm.trans e = refl :=
+  e.symm.self_trans_symm
+
+@[simp]
+theorem trans_apply (e₁ : U ≃ₗ[[R]] V) (e₂ : V ≃ₗ[[R]] W) (x : U) : (e₁.trans e₂) x = e₂ (e₁ x) :=
+  rfl
+
+@[simp]
+theorem symm_trans (e₁ : U ≃ₗ[[R]] V) (e₂ : V ≃ₗ[[R]] W) :
+    (e₁.trans e₂).symm = e₂.symm.trans e₁.symm :=
+  rfl
+
+protected theorem bijective (e : U ≃ₗ[[R]] V) : Function.Bijective ((e : U →ₗ[[R]] V) : U → V) :=
+  e.toLinearEquiv.bijective
+
+protected theorem injective (e : U ≃ₗ[[R]] V) : Function.Injective ((e : U →ₗ[[R]] V) : U → V) :=
+  e.toLinearEquiv.injective
+
+protected theorem surjective (e : U ≃ₗ[[R]] V) :
+    Function.Surjective ((e : U →ₗ[[R]] V) : U → V) :=
+  e.toLinearEquiv.surjective
+
+/-- A bijective morphism of vertex algebras yields an equivalence of vertex algebras. -/
+@[simps!]
+noncomputable def ofBijective (f : U →ₗ[[R]] V) (h : Function.Bijective f) : U ≃ₗ[[R]] V :=
+  { LinearEquiv.ofBijective (f : U →ₗ[R] V)
+      h with
+    toFun := f
+    map_vertex' := by intro x y n; exact f.map_vertex x y n }
+
+end VertexEquiv
 
 end VertexAlgebra

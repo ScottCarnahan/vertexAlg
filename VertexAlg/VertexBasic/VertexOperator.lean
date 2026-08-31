@@ -369,6 +369,44 @@ theorem isLocal_with_hasseDeriv_left (m n : ℕ) (h : IsLocalToOrderLeq A B n) :
 
 end Local
 
+section Unital
+
+variable [AddCommGroupWithOne U] [Module R U]
+
+/-- A field is creative with respect to the unit vector `1` if evaluating at `1` yields a regular
+series. -/
+def IsCreative (A : VertexOperator R U) : Prop :=
+  0 ≤ ((HahnModule.of R).symm (A 1)).order
+
+lemma ncoeff_eq_zero_of_isCreative {A : VertexOperator R U} (h : IsCreative A) {n : ℤ}
+    (hn : 0 ≤ n) :
+    ncoeff A n 1 = 0 := by
+  dsimp [IsCreative] at h
+  rw [ncoeff_apply, coeff_apply_apply, HahnSeries.coeff_eq_zero_of_lt_order]
+  grind
+
+lemma coeff_eq_zero_of_isCreative {A : VertexOperator R U} (h : IsCreative A) {n : ℤ}
+    (hn : n < 0) :
+    coeff A n 1 = 0 := by
+  dsimp [IsCreative] at h
+  rw [coeff_eq_ncoeff, ncoeff_eq_zero_of_lt_order]
+  grind
+
+/-- The state attached to a creative field is its `z^0`-coefficient at `1`. We omit the creative
+hypothesis. -/
+def state (A : VertexOperator R U) : U :=
+  A.ncoeff (-1 : ℤ) 1
+
+lemma state_eq_leadingCoeff {A : VertexOperator R U} (h : IsCreative A) (hA : A.state ≠ 0) :
+    A.state = ((HahnModule.of R).symm (A 1)).leadingCoeff := by
+  rw [state, ncoeff_apply, neg_neg, sub_self, coeff_apply_apply] at hA ⊢
+  dsimp [IsCreative] at h
+  have : ((HahnModule.of R).symm (A 1)).order = 0 :=
+    Int.le_antisymm (HahnSeries.order_le_of_coeff_ne_zero hA) h
+  rw [HahnSeries.leadingCoeff_eq, this]
+
+end Unital
+
 section ResidueProduct
 
 open HVertexOperator
@@ -525,8 +563,7 @@ theorem coeff_resProdRight_apply (A B : VertexOperator R V) (m n : ℤ) (v : V) 
     (A.resProdRight m B).coeff n v =
       (Int.negOnePow m) • ∑ᶠ i : ℕ, Int.negOnePow i • Ring.choose m i •
         (coeff B (n - m + i)) ((coeff A (-1 - i)) v) := by
-  dsimp only [resProdRight, LexResLeft, Int.reduceNeg, coeff_of_coeff]
-  simp only [LinearMap.coe_mk, AddHom.coe_mk, coeff_of_coeff, binomCompRight_apply_coeff]
+  simp only [resProdRight, Int.reduceNeg, coeff_ResLeft, binomCompRight_apply_coeff]
 
 @[simp]
 theorem resProdRight_apply_ncoeff (A B : VertexOperator R V) (m n : ℤ) (v : V) :

@@ -279,7 +279,7 @@ lemma twoCocycleOfSplitting_ofTwoCocycle (h : IsLieAbelian N) (c : twoCocycle R 
   apply (ofTwoCocycle c).incl_injective
   rw [twoCochain_val_apply, (ofTwoCocycle c).incl_twoCocycleOfSplitting_apply,
     twoCochain_val_apply, bracket_sectionTwoCocycleRight h c]
-  simp
+  simp; abel
 
 lemma bracket_of_splitting (x y : M) :
     ⁅s x, s y⁆ = s ⁅x, y⁆ + E.incl ((E.twoCocycleOfSplitting hE hs).val x y) := by

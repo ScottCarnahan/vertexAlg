@@ -251,8 +251,8 @@ def ofIterate.linearMap {V} [Semiring R] [AddCommMonoid V] [Module R V] [Partial
 def toIterate.linearMap {V} [Semiring R] [AddCommMonoid V] [Module R V] [PartialOrder Γ₁] :
     HahnSeries (Γ ×ₗ Γ₁) V →ₗ[R] HahnSeries Γ (HahnSeries Γ₁ V) where
   toFun := toIterate
-  map_add' _ _ := by ext; simp [toIterate]
-  map_smul' _ _ := by ext; simp [toIterate]
+  map_add' _ _ := by ext; simp [toIterate, Pi.add_def]
+  map_smul' _ _ := by ext; simp [toIterate, Pi.smul_def]
 
 section LeadingTerm
 
@@ -582,7 +582,7 @@ theorem leadingCoeff_pow_of_ne_zero {x : HahnSeries Γ R} {n : ℕ}
 
 theorem orderTop_pow_of_nonzero {x : HahnSeries Γ R} {n : ℕ} (h : x.leadingCoeff ^ n ≠ 0) :
     (x ^ n).orderTop = n • x.orderTop := by
-  haveI : Nontrivial R := nontrivial_of_ne (x.leadingCoeff ^ n) 0 h
+  have : Nontrivial R := nontrivial_of_ne (x.leadingCoeff ^ n) 0 h
   induction n with
   | zero => simp
   | succ n ih =>
@@ -760,7 +760,7 @@ theorem embDomain_smul (φ : Γ ↪o Γ') (f : Γ₁ ↪o Γ₂) (hf : ∀ (g : 
       simp only [mem_vaddAntidiagonal, HahnSeries.embDomain_coeff, HahnSeries.mem_support, ← hf,
         OrderEmbedding.eq_iff_eq, Equiv.symm_apply_apply, HahnSeries.embDomain_coeff] at h1
       exact ⟨i, j, h1, rfl⟩
-  · rw [HahnSeries.embDomain_notin_range hg, eq_comm]
+  · rw [HahnSeries.embDomain_of_notMem_range hg, eq_comm]
     contrapose! hg
     obtain ⟨_, hi, _, hj, h⟩ :=
       support_smul_subset_vadd_support <| (HahnSeries.mem_support _ g).mpr hg
@@ -779,9 +779,9 @@ namespace HahnSeries.SummableFamily
 theorem hsum_subsingleton [PartialOrder Γ] [AddCommMonoid R] [Subsingleton α]
     {s : SummableFamily Γ R α} (a : α) :
     s.hsum = s a := by
-  haveI : Unique α := uniqueOfSubsingleton a
+  have : Unique α := uniqueOfSubsingleton a
   let e : Unit ≃ α := Equiv.ofUnique Unit α
-  have he : ∀u : Unit, e u = a := fun u ↦ (fun f ↦ (Equiv.apply_eq_iff_eq_symm_apply f).mpr) e rfl
+  have he : ∀u : Unit, e u = a := fun u ↦ (fun f ↦ (Equiv.eq_symm_apply f).mp) e rfl
   have hs : Equiv e.symm s = single (ι := Unit) default (s a) := by ext; simp [he]
   rw [← hsum_equiv e.symm, hs, hsum_single]
 
@@ -827,9 +827,8 @@ theorem cosupp_subset_iunion_cosupp_left [PartialOrder Γ] [PartialOrder Γ₁]
       t.isPWO_iUnion_support g)).biUnion
       fun (g' : Γ × Γ₁) => Set.Finite.toFinset (s.finite_co_support (g'.1)) := by
   intro a ha
-  simp_all only [mem_vaddAntidiagonal, Set.mem_iUnion, mem_support, ne_eq, Set.Finite.mem_toFinset,
-    Function.mem_support, mem_biUnion, Prod.exists, exists_and_right, exists_and_left]
-  exact Exists.intro gh.1 ⟨⟨hgh.1, Exists.intro gh.2 hgh.2⟩, ha⟩
+  simp_all only [mem_vaddAntidiagonal, Set.mem_iUnion, mem_support, ne_eq, mem_biUnion, Prod.exists]
+  use gh.1, gh.2
 
 variable [AddCommMonoid Γ] [PartialOrder Γ] [IsOrderedCancelAddMonoid Γ]
 
@@ -859,7 +858,7 @@ theorem pi_finite_co_support {σ : Type*} (s : Finset σ) {R} [CommSemiring R] (
         (b a (mem_cons_self a s'), fun (i : σ) (hi : i ∈ s') => b i (mem_cons_of_mem hi)))
         ((Set.Finite.prod (htfc a gh.1) (hp gh.2)).subset ?_) ?_
       · intro x hx
-        simp_all only [Set.mem_image, Set.mem_prod, Set.mem_setOf_eq]
+        simp_all only [Set.mem_image, Set.mem_prod, Set.mem_ofPred_eq]
         obtain ⟨y, hy⟩ := hx
         constructor
         · have h : x.1 = y a (mem_cons_self a s') := by rw [← hy.2]
@@ -876,10 +875,10 @@ theorem pi_finite_co_support {σ : Type*} (s : Finset σ) {R} [CommSemiring R] (
         · exact hhi ▸ hxy.1
         · exact congrFun (congrFun hxy.2 i) (Or.resolve_left (mem_cons.mp hi) hhi)
     · intro x hx
-      simp only [Set.mem_setOf_eq] at hx
+      simp only [Set.mem_ofPred_eq] at hx
       have hhx := exists_ne_zero_of_sum_ne_zero hx
       simp only [mem_coe, Finset.mem_antidiagonal, Set.mem_iUnion, mem_support, ne_eq,
-        mem_cons, Set.mem_setOf_eq, exists_prop, Prod.exists]
+        mem_cons, Set.mem_ofPred_eq, exists_prop, Prod.exists]
       use hhx.choose.1, hhx.choose.2
       refine ⟨⟨?_, ?_⟩, hhx.choose_spec.2⟩
       · use x a (mem_cons_self a s')
@@ -1279,7 +1278,7 @@ theorem mvpow_finite_co_support {σ : Type*} [Fintype σ] (y : σ →₀ HahnSer
     refine Set.Finite.of_surjOn (fun a => Finsupp.onFinset univ (fun i => a i (mem_univ i))
       (fun i _ ↦ mem_univ i)) (fun a ha => ?_) this
     simp_all only [dite_eq_ite, ite_true, implies_true, dite_true, mem_univ, ne_eq,
-      Set.mem_setOf_eq, Set.mem_image]
+      Set.mem_ofPred_eq, Set.mem_image]
     use fun i _ => a i
     exact ⟨ha, by ext; simp⟩
   exact pi_finite_co_support Finset.univ _ g (fun i => isPWO_iUnion_support_powers
@@ -1729,7 +1728,7 @@ def onePlusPosOrderTop (Γ) (R) [LinearOrder Γ] [AddCommMonoid Γ] [IsOrderedCa
     intro x y hx hy
     obtain (_|_) := subsingleton_or_nontrivial R
     · simp
-    · simp_all only [Set.mem_setOf_eq, minus_one_orderTop_pos]
+    · simp_all only [Set.mem_ofPred_eq, minus_one_orderTop_pos]
       have h1 : x.leadingCoeff * y.leadingCoeff = 1 := by rw [hx.2, hy.2, mul_one]
       constructor
       · rw [orderTop_mul_of_ne_zero (h1 ▸ one_ne_zero), hx.1, hy.1, add_zero]

@@ -297,7 +297,7 @@ noncomputable def applyPi {ι : Type*} [DecidableEq ι] {Γ : ι → Type*} [∀
       A.coeff (g i) (x (Function.update g i 0)), by
       simp only [supportMapSpace, Set.mem_insert_iff, not_or, forall_exists_index, and_imp,
         Submodule.mem_mk, AddSubmonoid.mem_mk, AddSubsemigroup.mem_mk,
-        Set.mem_setOf_eq, ite_eq_left_iff, not_exists, not_and, not_not]
+        Set.mem_ofPred_eq, ite_eq_left_iff, not_exists, not_and, not_not]
       intro y j hj h2 hy h
       exact (hy (h j hj h2)).elim⟩
   map_add' x y := by

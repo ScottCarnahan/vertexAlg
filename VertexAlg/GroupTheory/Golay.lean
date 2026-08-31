@@ -42,6 +42,7 @@ open scoped LinearAlgebra.Projectivization
 
 /-- Given a dual vector, embed the preimage of 1 into projective space. When the dual vector is
 zero, this is the embedding of the empty set. -/
+@[simps]
 def complement (x : V →ₗ[K] K) : x⁻¹' {1} ↪ ℙ K V where
   toFun y := Projectivization.mk K y.1 (fun hy ↦ by simpa [hy] using y.2)
   inj' a b h := by
@@ -81,8 +82,8 @@ lemma mem_ker_projectivization_or_mem_complement_range (x : V →ₗ[K] K) (y : 
     use ⟨c.inv • z, by rw [Set.mem_preimage, Set.mem_singleton_iff, map_smul, smul_eq_mul,
       Units.inv_eq_val_inv, Units.inv_mul_of_eq (by rfl)]⟩
     have : c.inv • z ∈ y.submodule := SMulMemClass.smul_mem c.inv hz1
-    simp only [complement, Function.Embedding.coeFn_mk]
-    simp only [Units.inv_eq_val_inv, Units.val_inv_eq_inv_val, Units.val_mk0, c] at this ⊢
+    simp only [Units.inv_eq_val_inv, Units.val_inv_eq_inv_val, complement_apply]
+    simp only [Units.inv_eq_val_inv, Units.val_inv_eq_inv_val, c] at this ⊢
     rwa [← mem_submodule_iff]
 
 lemma notMem_range_complement (x : V →ₗ[K] K) (y : ℙ K V) (hy : y ∈ x.ker.projectivization) :
@@ -90,7 +91,7 @@ lemma notMem_range_complement (x : V →ₗ[K] K) (y : ℙ K V) (hy : y ∈ x.ke
   rw [Submodule.mem_projectivization_iff_submodule_le] at hy
   rw [Set.mem_range, not_exists]
   intro z h
-  simp only [complement, Function.Embedding.coeFn_mk] at h
+  simp only [complement_apply] at h
   obtain ⟨z, hz⟩ := z
   have hxz : x z = 1 := hz
   have hx := LinearMap.mem_ker.mp (hy ((mem_submodule_iff y.rep_nonzero).mpr (mk_rep y)))

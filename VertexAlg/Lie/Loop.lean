@@ -243,7 +243,7 @@ lemma add_finsupp {α A : Type*} [AddMonoid A] {f g : α → A} (hf : Finite f.s
     (hg : Finite g.support) :
     Finsupp.ofSupportFinite f hf + Finsupp.ofSupportFinite g hg =
       Finsupp.ofSupportFinite (f + g) (finite_support_add hf hg) := by
-  ext; simp [Finsupp.add_apply, Finsupp.ofSupportFinite_coe]
+  ext; simp [Finsupp.add_apply]; rfl
 --#find_home! add_finsupp --[Mathlib.Algebra.Group.Finsupp]
 
 lemma finite_support_bracket [AddCancelCommMonoid A] (a : A) (x y : A →₀ L) :
@@ -418,6 +418,7 @@ noncomputable instance [DecidableEq A] [AddCommMonoid A] :
     GradedLieAlgebra (fun (a : A) ↦ (DirectSum.decomposeTensor
       (fun b ↦ AddMonoidAlgebra.grade R b) L a)) where
   bracket_mem i j gi gj hi hj := by
+    rw [DirectSum.decomposeTensor_apply] at hi hj
     obtain ⟨xi, hxi⟩ := hi
     obtain ⟨xj, hxj⟩ := hj
     simp only [← hxi, ← hxj]
@@ -430,7 +431,7 @@ noncomputable instance [DecidableEq A] [AddCommMonoid A] :
       | zero => simp
       | tmul u v =>
         simp only [LinearMap.rTensor_tmul, Submodule.subtype_apply, ExtendScalars.bracket_tmul]
-        simp only [DirectSum.decomposeTensor, LinearMap.mem_range]
+        simp only [DirectSum.decomposeTensor_apply, LinearMap.mem_range]
         obtain ⟨x, hx⟩ := x
         obtain ⟨u, hu⟩ := u
         use ⟨x * u, SetLike.mul_mem_graded hx hu⟩ ⊗ₜ ⁅y, v⁆

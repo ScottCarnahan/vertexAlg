@@ -8,8 +8,10 @@ module
 public import VertexAlg.VertexBasic.Defs
 
 /-!
-# Basic results on Vertex algebras
-In this file we prove some basic results about vertex algebras.
+# Basic results on the Borcherds identity
+In this file we prove some basic results about vertex algebras involving the Borcherds identity.
+## Definitions
+ * Borcherds identity sums: These are composites of vertex operators multiplied by binomial powers.
 ## Main results
 * Associativity is equivalent to a special case of the Borcherds identity.
 * The commutator formula is equivalent to a special case of the Borcherds identity.
@@ -67,6 +69,67 @@ section NonUnital
 
 variable [CommRing R] [AddCommGroup V] [Module R V] (Y : stateField R V)
 
+
+/-- The first sum in the Borcherds identity, giving the `x^t z^s` coefficient of
+`x^r (1 + z/x)^r (a(x)b)(z)c`. -/
+noncomputable def borcherdsSum1 (a b c : V) (r s t : ℤ) : V :=
+  Finset.sum (Finset.range (Int.toNat (-t - order Y a b)))
+    (fun i ↦ (Ring.choose r i) • ncoeff (Y (ncoeff (Y a) (t+i) b)) (r+s-i) c)
+
+/-- The second sum in the Borcherds identity, giving the `y^r z^s` coefficient of
+`y^t (1 - z/y)^t a(y)b(z)c`. -/
+noncomputable def borcherdsSum2 (a b c : V) (r s t : ℤ) : V :=
+  Finset.sum (Finset.range (Int.toNat (-s - order Y b c)))
+    (fun i ↦ (Int.negOnePow i) • (Ring.choose t i) • ncoeff (Y a) (r+t-i)
+    (ncoeff (Y b) (s+i) c))
+
+/-- The third sum in the Borcherds identity, giving the `y^r z^s` coefficient of
+`-(-y)^t (1 - y/z)^t b(z)a(y)c`. -/
+noncomputable def borcherdsSum3 (a b c : V) (r s t : ℤ) : V :=
+  Finset.sum (Finset.range (Int.toNat (-r - order Y a c)))
+    (fun i ↦ (t+i+1).negOnePow • (Ring.choose t i) • ncoeff (Y b) (s+t-i)
+    (ncoeff (Y a) (r+i) c))
+
+/-- The Borcherds identity, also called the Jacobi identity or Cauchy-Jacobi identity when put in
+power-series form.  It is a formal distribution analogue of the combination of commutativity and
+associativity. -/
+noncomputable def borcherdsId (a b c : V) (r s t : ℤ) : Prop :=
+  borcherdsSum1 Y a b c r s t = borcherdsSum2 Y a b c r s t + borcherdsSum3 Y a b c r s t
+
+/-- The weak associativity property for vertex algebras (needs fixing). -/
+def weakAssociativity (a b c : V) (r s t : ℤ) : Prop :=
+  borcherdsSum1 Y a b c r s t = borcherdsSum2 Y a b c r s t
+
+
+/-- A vertex algebra over a commutative ring `R` is an `R`-module `V` with a distinguished unit
+element `1`, together with a multiplication operation that takes values in Laurent series with
+coefficients in `V`, such that `a(z) 1 ∈ a + zV[[z]]` for all `a ∈ V` -/
+class VertexAlgebra1 (R V : Type*) [CommRing R] [AddCommGroupWithOne V] extends Module R V where
+  /-- The multiplication operation. -/
+  Y : stateField R V
+  /-- The Borcherds identity holds. -/
+  borcherdsId : ∀ (a b c : V) (r s t : ℤ), borcherdsId Y a b c r s t
+  /-- Right multiplication by the unit vector is nonsingular. -/
+  unit_comm : ∀ (a : V), order Y a 1 = 0
+  /-- The constant coefficient of right multiplication by the unit vector is identity. -/
+  unit_right : ∀ (a : V), coeff (Y a) 0 1 = a
+
+section
+
+variable {R : Type*} {V : Type*} [CommRing R] [AddCommGroupWithOne V] [VertexAlgebra1 R V]
+
+theorem borcherdsIdentity (a b c : V) (r s t : ℤ) :
+    borcherdsId VertexAlgebra1.Y (R := R) a b c r s t :=
+  VertexAlgebra1.borcherdsId a b c r s t
+
+theorem unit_right_order (a : V) : order VertexAlgebra1.Y (R := R) a 1 = 0 :=
+  VertexAlgebra1.unit_comm a
+
+theorem unit_right_zero (a : V) : HVertexOperator.coeff (R := R) (VertexAlgebra1.Y a) 0 1 = a :=
+  VertexAlgebra1.unit_right a
+
+end
+
 theorem associativity_left (a b c : V) (s t : ℤ) : borcherdsSum1 Y a b c 0 s t =
     ncoeff (Y (ncoeff (Y a) t b)) s c := by
   unfold borcherdsSum1
@@ -85,8 +148,9 @@ theorem associativity_left (a b c : V) (s t : ℤ) : borcherdsSum1 Y a b c 0 s t
 
 theorem associativity_right (a b c : V) (s t : ℤ) : borcherdsSum2 Y a b c 0 s t +
     borcherdsSum3 Y a b c 0 s t = Finset.sum (Finset.range (Int.toNat (-s - order Y b c)))
-    (fun i ↦ (-1)^i • (Ring.choose (t : ℤ) i) • ncoeff (Y a) (t-i) (ncoeff (Y b) (s+i) c)) +
-    Finset.sum (Finset.range (Int.toNat (- order Y a c))) (fun i ↦ (-1: ℤˣ)^(t+i+1) •
+    (fun i ↦ (Int.negOnePow i) • (Ring.choose (t : ℤ) i) •
+      ncoeff (Y a) (t-i) (ncoeff (Y b) (s+i) c)) +
+    Finset.sum (Finset.range (Int.toNat (- order Y a c))) (fun i ↦ (t+i+1).negOnePow •
     (Ring.choose t i) • ncoeff (Y b) (s+t-i) (ncoeff (Y a) i c)) := by
   unfold borcherdsSum2 borcherdsSum3
   simp only [neg_zero, zero_sub, zero_add]
@@ -107,7 +171,7 @@ theorem commutator_right_2 (a b c : V) (r s : ℤ) : borcherdsSum2 Y a b c r s 0
   | succ n =>
     rw [Finset.eventually_constant_sum ?_ (Nat.one_le_iff_ne_zero.mpr
         (Nat.succ_ne_zero n)), Finset.sum_range_one, add_zero, Ring.choose_zero_right (0 : ℤ),
-        one_smul, Nat.cast_zero, add_zero, sub_zero, pow_zero, one_smul]
+        one_smul, Nat.cast_zero, Int.negOnePow_zero, one_smul, add_zero, sub_zero]
     intro i hi
     rw [Ring.choose_zero_pos ℤ (Nat.ne_zero_iff_zero_lt.mp <| Nat.one_le_iff_ne_zero.mp <| hi),
       zero_smul, smul_zero]
@@ -122,7 +186,7 @@ theorem commutator_right_3 (a b c : V) (r s : ℤ) : borcherdsSum3 Y a b c r s 0
   | succ n =>
     rw [Finset.eventually_constant_sum ?_ (Nat.one_le_iff_ne_zero.mpr (Nat.succ_ne_zero n)),
       Finset.sum_range_one, add_zero, Ring.choose_zero_right (0 : ℤ), one_smul, Nat.cast_zero,
-      add_zero, sub_zero, zero_add, add_zero, uzpow_one, Units.neg_smul, one_smul]
+      add_zero, sub_zero, zero_add, add_zero, Int.negOnePow_one, Units.neg_smul, one_smul]
     intro i hi
     rw [Ring.choose_zero_pos ℤ (Nat.ne_zero_iff_zero_lt.mp <| Nat.one_le_iff_ne_zero.mp <| hi),
         zero_smul, smul_zero]
@@ -144,66 +208,64 @@ theorem borcherdsSum1_eq_zero (a b c : V) (r s t : ℤ) (h : -order Y a b ≤ t)
 
 theorem locality_left_eq_borcherdsSum2 (a b c : V) (r s : ℤ) :
     (Finset.sum (Finset.HasAntidiagonal.antidiagonal (Int.toNat (-s - order Y b c))) fun m ↦
-    (-1) ^ m.2 • Nat.choose (Int.toNat (-s - order Y b c)) m.2 •
+    (Int.negOnePow m.2) • Nat.choose (Int.toNat (-s - order Y b c)) m.2 •
     (HVertexOperator.coeff (Y a) (-r - 1 - m.1))
     ((HVertexOperator.coeff (Y b) (-s - 1 - m.2)) c)) =
     borcherdsSum2 Y a b c r s (Int.toNat (-s - order Y b c)) := by
   unfold borcherdsSum2 ncoeff
   rw [Finset.Nat.antidiagonal_eq_map']
-  simp_all only [Finset.sum_map, Function.Embedding.coeFn_mk]
+  simp_all only [Finset.sum_map, LinearMap.coe_mk, AddHom.coe_mk]
   rw [Finset.eventually_constant_sum ?_ (Nat.le_succ (Int.toNat (-s - order Y b c)))]
   · refine Finset.sum_congr rfl ?_
     intro i hi
-    simp_all only [Finset.mem_range, Int.reduceNeg, neg_sub, LinearMap.coe_mk, AddHom.coe_mk]
+    simp_all only [Finset.mem_range, neg_sub]
     congr 1
     rw [Ring.choose_natCast, natCast_zsmul]
-    congr 1
-    rw [Int.neg_sub_one_sub_nat i r 1 (-s - order Y b c) (le_of_lt (Int.lt_toNat.mp hi)),
-      show -s - 1 - i = -i + -s - 1 by omega]
-    congr 1
-    rw [Int.neg_add, Int.add_comm]
+    congr
+    · refine congrArg (coeff (Y a)) ?_
+      rw [sub_eq_sub_iff_add_eq_add, Int.sub_add_cancel, ← Int.sub_sub,
+        Int.sub_eq_add_neg (b := r), add_comm _ (-r), Int.add_sub_assoc, add_assoc,
+        eq_neg_add_iff_add_eq, Int.add_right_neg, ← Int.sub_eq_iff_eq_add', zero_sub_sub,
+        ← Nat.cast_sub (le_of_lt hi), Nat.cast_inj]
+      rfl
+    · refine congrArg (coeff (Y b)) ?_
+      rw [Int.neg_add, show -s + -i - 1 = -s - 1 - i by abel]
+      congr
   intro i hi
-  have h : (HVertexOperator.coeff (Y b) (-s - 1 - ↑i)) c = 0 := by
-    refine coeff_zero_if_lt_order Y b c ?_ ?_
-    simp_all only [ge_iff_le, Int.toNat_le, tsub_le_iff_right]
-    linarith
-  rw [h, LinearMap.map_zero, smul_zero, smul_zero]
+  have h : (HVertexOperator.coeff (Y b) (-s - 1 - i)) c = 0 :=
+    coeff_eq_zero_of_lt_order Y b c (-s - 1 - i) (by grind)
+  rw [smul_eq_zero_of_right]
+  rw [smul_eq_zero_of_right]
+  grind only [Function.Embedding.coeFn_mk, = map_zero]
 
 theorem locality_right_eq_borcherdsSum3 (a b c : V) (r s : ℤ) : Finset.sum
-    (Finset.HasAntidiagonal.antidiagonal (Int.toNat (-r - order Y a c))) (fun m => -(-1)^(m.2) •
-    (Nat.choose (Int.toNat (-r - order Y a c)) m.2) • HVertexOperator.coeff (Y b) (-s - 1 - m.2)
-    (HVertexOperator.coeff (Y a) (-r - 1 - m.1) c)) =
+    (Finset.HasAntidiagonal.antidiagonal (Int.toNat (-r - order Y a c)))
+      (fun m => -(Int.negOnePow m.2) • (Nat.choose (Int.toNat (-r - order Y a c)) m.2) •
+      HVertexOperator.coeff (Y b) (-s - 1 - m.2) (HVertexOperator.coeff (Y a) (-r - 1 - m.1) c)) =
     borcherdsSum3 Y a b c r s (Int.toNat (-r - order Y a c)) := by
   unfold borcherdsSum3 ncoeff
   rw [Finset.Nat.antidiagonal_eq_map]
-  simp_all only [Finset.sum_map, Function.Embedding.coeFn_mk]
+  simp only [neg_sub, Units.neg_smul, Finset.sum_map, Int.ofNat_toNat, LinearMap.coe_mk,
+    AddHom.coe_mk]
+  erw [Function.Embedding.coeFn_mk]
+  simp only [neg_add_rev]
   rw [Finset.eventually_constant_sum ?_ (Nat.le_succ (Int.toNat (-r - order Y a c)))]
   · refine Finset.sum_congr rfl ?_
     intro i hi
-    simp_all only [Finset.mem_range, Int.reduceNeg, coeff_apply_apply, neg_smul,
-      LinearMap.coe_mk, AddHom.coe_mk, neg_sub, neg_add_rev]
-    have : (-1) ^ ((-r - order Y a c).toNat - i) = (-1) ^ (-r - order Y a c).toNat * (-1) ^ i :=
-      Int.neg_one_pow_sub (-r - order Y a c).toNat i <| Nat.le_of_succ_le hi
-    rw [this, ← Units.coe_neg_one]
-    simp only [← Int.negOnePow_def]
-    rw [Int.negOnePow_add, mul_comm _ (Int.negOnePow 1), ← smul_smul (Int.negOnePow 1),
-      Int.negOnePow_one]
-    simp only [Units.val_neg, Units.val_one, Int.reduceNeg, Units.neg_smul, one_smul, neg_inj]
+    simp_all only [Finset.mem_range]
+    rw [Nat.cast_sub (le_of_lt hi), show (max (-r - Y.order a c) 0) = -r - Y.order a c by lia,
+      Int.negOnePow_sub, Int.negOnePow_add, mul_comm _ (Int.negOnePow 1),
+      ← smul_smul (Int.negOnePow 1), Int.negOnePow_one, Int.negOnePow_add, Units.neg_smul, one_smul,
+      neg_inj ]
     congr 1
-    · rw [Int.negOnePow_add]
-      rfl
-    · rw [Ring.choose_natCast]
-      norm_cast
-      congr 1
-      · rw [Nat.choose_symm (Nat.le_of_succ_le hi)]
-      · rw [Int.neg_sub_one_sub_nat i s 1 (-r - order Y a c) (le_of_lt (Int.lt_toNat.mp hi)),
-          show -r - 1 - i = -i + -r - 1 by linarith]
+    · grind
+    · have : (-r - Y.order a c) = (-r - Y.order a c).toNat := by grind
+      rw [this, Ring.choose_natCast, Nat.choose_symm (by grind), natCast_zsmul]
+      grind
   intro i hi
-  have h : (HVertexOperator.coeff (Y a) (-r - 1 - ↑i)) c = 0 := by
-    refine coeff_zero_if_lt_order Y a c ?_ ?_
-    simp_all only [ge_iff_le, Int.toNat_le, tsub_le_iff_right]
-    linarith
-  rw [h, LinearMap.map_zero, smul_zero, smul_zero]
+  have h : (HVertexOperator.coeff (Y a) (-r - 1 - ↑i)) c = 0 :=
+    coeff_eq_zero_of_lt_order Y a c (-r - 1 - i) (by grind)
+  rw [h, LinearMap.map_zero, smul_zero, smul_zero, neg_zero]
 
 /-!
 theorem locality_if_Borcherds_sums_2_3_eq (a b : V) (h : ∀ (c : V) (r s : ℤ)

@@ -175,9 +175,7 @@ instance instIsOrderedCancelSMulLex [PartialOrder G] [PartialOrder G₁] [Partia
     [IsOrderedCancelSMul G P₁] [PartialOrder P₂] [SMul G₁ P₂] [IsOrderedCancelSMul G₁ P₂] :
     IsOrderedCancelSMul (G ×ₗ G₁) (P₁ ×ₗ P₂) where
   smul_le_smul_left a b h c := by
-    have hc (x : Lex (P₁ × P₂)) : (ofLex c).1 • (ofLex x).1 = (ofLex (c • x)).1 := by
-        simp only [ofLex_smul]
-        rfl
+    have hc (x : Lex (P₁ × P₂)) : (ofLex c).1 • (ofLex x).1 = (ofLex (c • x)).1 := rfl
     obtain h₁ | ⟨h₂, h₃⟩ := Prod.Lex.le_iff.mp h
     · have := SMul.smul_lt_smul_of_le_of_lt (Preorder.le_refl (ofLex c).1) h₁
       exact Prod.Lex.le_iff.mpr <| Or.inl <| by rwa [← hc, ← hc]
@@ -185,12 +183,10 @@ instance instIsOrderedCancelSMulLex [PartialOrder G] [PartialOrder G₁] [Partia
       · have := (congrArg (HSMul.hSMul (ofLex c).1) h₂)
         rwa [← hc]
       · have := (IsOrderedSMul.smul_le_smul_left (ofLex a).2 (ofLex b).2 h₃ (ofLex c).2)
-        simp only [ofLex_smul, ge_iff_le]
+        simp only [ge_iff_le]
         exact this
   smul_le_smul_right a b h c := by
-    have hc (a : Lex (G × G₁)) : (ofLex a).1 • (ofLex c).1 = (ofLex (a • c)).1 := by
-        simp only [ofLex_smul]
-        rfl
+    have hc (a : Lex (G × G₁)) : (ofLex a).1 • (ofLex c).1 = (ofLex (a • c)).1 := rfl
     obtain h₁ | ⟨h₂, h₃⟩ := Prod.Lex.le_iff.mp h
     · exact Prod.Lex.le_iff.mpr <| Or.inl <| by
         have := SMul.smul_lt_smul_of_lt_of_le h₁ (Preorder.le_refl (ofLex c).1)

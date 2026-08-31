@@ -130,7 +130,7 @@ noncomputable def LieModule.ofStructureConstant [LieRing L] [LieAlgebra R L]
 noncomputable def subMin (x : ι →₀ ℕ) (h : x.support.Nonempty) : ι →₀ ℕ :=
   x - (Finsupp.single (x.support.min' h) 1)
 
-lemma rest_apply (x : ι →₀ ℕ) (h : x.support.Nonempty) (i : ι) :
+lemma subMin_apply (x : ι →₀ ℕ) (h : x.support.Nonempty) (i : ι) :
     (subMin x h) i = x i - (Finsupp.single (x.support.min' h) 1) i :=
   rfl
 
@@ -138,7 +138,7 @@ lemma rest_apply (x : ι →₀ ℕ) (h : x.support.Nonempty) (i : ι) :
 the recursive definition in Bourbaki, but with bracket expanded in structure constants,
 and no degree restriction on domain. -/
 noncomputable def actionAux (f : ι → ι → ι →₀ R) : ℕ → (ι →₀ ℕ) → ι → MvPolynomial ι R
-  | 0, x, i => MvPolynomial.monomial (Multiset.ofList [i]).toFinsupp 1
+  | 0, x, i => MvPolynomial.monomial (Finsupp.single i 1) 1
   | d + 1, x, i => if hi : ∀ j ∈ x.support, i ≤ j
     then MvPolynomial.monomial (x + Finsupp.single i 1) 1
     else have h : x.support.Nonempty := by grind only [= Finset.nonempty_def]
@@ -151,6 +151,6 @@ noncomputable def actionAux (f : ι → ι → ι →₀ R) : ℕ → (ι →₀
 noncomputable def actionMap (f : ι → ι → ι →₀ R) (x : ι →₀ ℕ) (i : ι) : MvPolynomial ι R :=
   actionAux f (x.sum fun _ e => e) x i
 
-
+-- TODO: show that this yields a representation
 
 end LieAlgebra.PBW
