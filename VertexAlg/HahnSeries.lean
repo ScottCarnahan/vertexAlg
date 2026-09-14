@@ -635,8 +635,8 @@ noncomputable def unitSingle [Semiring R] {g : Γ} (hg : IsAddUnit g) {r : R} (h
   val_inv := by simp
   inv_val := by simp
 
-variable [PartialOrder Γ'] [AddCommMonoid Γ'] [IsOrderedCancelAddMonoid Γ'] [EquivLike F Γ Γ']
-  [AddMonoidHomClass F Γ Γ'] [OrderIsoClass F Γ Γ']
+variable {Γ' F : Type*} [PartialOrder Γ'] [AddCommMonoid Γ'] [IsOrderedCancelAddMonoid Γ']
+  [EquivLike F Γ Γ'] [AddMonoidHomClass F Γ Γ'] [OrderIsoClass F Γ Γ']
 
 /-- A ring isomorphism on Hahn series induced by an additive order isomorphism. -/
 def equivDomainRingHom [NonAssocSemiring R] (f : F) :
@@ -774,7 +774,20 @@ end Multiplication
 
 section Summable
 
-namespace HahnSeries.SummableFamily
+namespace HahnSeries
+
+lemma isUnit_single_sub_single [LinearOrder Γ] [AddCommGroup Γ] [IsOrderedCancelAddMonoid Γ]
+    [CommRing R] (g g' : Γ) (h : g < g') :
+    IsUnit (single g (1 : R) - single g' 1) := by
+  cases subsingleton_or_nontrivial R; · exact isUnit_of_subsingleton _
+  refine isUnit_of_mul_isUnit_right (x := single (-g) 1) ?_
+  simp only [mul_sub, neg_add_cancel, single_zero_one, single_mul_single, mul_one]
+  refine isUnit_of_orderTop_pos ?_
+  simp only [sub_sub_cancel_left, orderTop_neg, ne_eq, one_ne_zero, not_false_eq_true,
+    orderTop_single, WithTop.coe_pos]
+  exact lt_neg_add_iff_lt.mpr h
+
+namespace SummableFamily
 
 theorem hsum_subsingleton [PartialOrder Γ] [AddCommMonoid R] [Subsingleton α]
     {s : SummableFamily Γ R α} (a : α) :

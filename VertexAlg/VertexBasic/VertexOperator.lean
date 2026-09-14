@@ -162,11 +162,14 @@ end HasseDerivative
 section Binomial
 
 /-- subtraction of monomials. Maybe put this in HahnSeries folder. -/
-noncomputable def unitSub {σ : Type*} [LinearOrder σ] {i j : σ} : HahnSeries (σ → ℤ) R :=
+noncomputable def unitSub' {σ : Type*} [LinearOrder σ] {i j : σ} : HahnSeries (σ → ℤ) R :=
   HahnSeries.single (fun k ↦ if k = i then 1 else 0) 1 -
     HahnSeries.single (fun k ↦ if k = j then 1 else 0) 1
 
-
+/-- Probably unnecessary. Belongs in HahnSeries -/
+noncomputable def unitSubPow [LinearOrder Γ] [AddCommGroup Γ]
+  [IsOrderedCancelAddMonoid Γ] (g g' : Γ) (h : g < g') (n : ℤ) : (HahnSeries Γ R)ˣ :=
+  (IsUnit.unit (HahnSeries.isUnit_single_sub_single g g' h)) ^ n
 
 /-!
 (2025-7-29) Use Finsupp.
@@ -194,15 +197,12 @@ set_option backward.isDefEq.respectTransparency false in
 noncomputable def binomCompLeft (n : ℤ) : HVertexOperator (ℤ ×ₗ ℤ) R V V :=
   HahnSeries.binomialPow R (toLex (0, 1) : ℤ ×ₗ ℤ) (toLex (1, 0)) n • (lexComp A B)
 
-set_option backward.isDefEq.respectTransparency false in
-
 @[simp]
 theorem binomialPow_smul_binomCompLeft (m n : ℤ) :
     HahnSeries.binomialPow R (toLex (0, 1) : ℤ ×ₗ ℤ) (toLex (1, 0)) m • binomCompLeft A B n =
       binomCompLeft A B (m + n) := by
   rw [binomCompLeft, binomCompLeft, ← mul_smul, HahnSeries.binomialPow_add]
 
-set_option backward.isDefEq.respectTransparency false in
 theorem binomCompLeft_apply_coeff (k l n : ℤ) (v : V) :
     (binomCompLeft A B n).coeff (toLex (k, l)) v =
       ∑ᶠ (m : ℕ), Int.negOnePow m • Ring.choose n m • A.coeff (l - n + m) (B.coeff (k - m) v) := by
@@ -237,13 +237,11 @@ theorem binomCompLeft_one_left_nat_coeff (n : ℕ) (g : ℤ ×ₗ ℤ) :
     have : (ofLex g).2 - n + i ≠ 0 := by omega
     rw [HahnSeries.coeff_single_of_ne this, smul_zero, smul_zero]
 
-set_option backward.isDefEq.respectTransparency false in
 /-- `(X - Y)^n B(Y) A(X)` as a linear map from `V` to `V((Y))((X))` -/
 noncomputable def binomCompRight (n : ℤ) : HVertexOperator (ℤ ×ₗ ℤ) R V V :=
   (Int.negOnePow n : R) •
     HahnSeries.binomialPow R (toLex (0, 1) : ℤ ×ₗ ℤ) (toLex (1, 0)) n • (lexComp B A)
 
-set_option backward.isDefEq.respectTransparency false in
 @[simp]
 theorem binomialPow_smul_binomCompRight (m n : ℤ) :
     Int.negOnePow m • HahnSeries.binomialPow R (toLex (0, 1) : ℤ ×ₗ ℤ) (toLex (1, 0)) m •
@@ -330,7 +328,6 @@ def IsLocalToOrderLeq (n : ℕ) : Prop :=
   ∀ (k l : ℤ), (binomCompLeft A B n).coeff (toLex (k, l)) =
     (binomCompRight A B n).coeff (toLex (l, k))
 
-set_option backward.isDefEq.respectTransparency false in
 theorem isLocalToOrderLeqAdd (m n : ℕ) (h : IsLocalToOrderLeq A B n) :
     IsLocalToOrderLeq A B (n + m) := by
   induction m with

@@ -10,9 +10,12 @@ public import Mathlib.Algebra.Lie.Loop
 public import Mathlib.Data.List.Sort
 public import Mathlib.Data.List.ToFinsupp
 public import Mathlib.Data.Sym.Sym2
+public import Mathlib.RingTheory.FilteredAlgebra.Basic
 
 /-!
-Attempt at PBW
+## Attempt at PBW
+Following Bourbaki, `Lie groups and Lie algebras` Chapter 1 section 2.7
+
 For M a monotonic tuple (λ₁,…,λₙ), define z_M = z_λ₁ ⋯ z_λₙ and
 x_M = x_λ₁ ⊗ ⋯ ⊗ x_λₙ
 say deg z_M ≤ p
@@ -31,13 +34,77 @@ If λ ≤ λ₁, then f_p(z_λ,x_M) = x_λ x_M
 otherwise, f_p(z_λ,x_M) = x_λ₁ f_{p-1}(z_λ,x_M') + f_{p-1}(⁅z_λ,z_λ₁⁆,x_M')
 * Expand ⁅z_λ,z_λ₁⁆ = ∑ i ∈ (f λ λ₁).support, (f λ λ₁ i) • f_{p-1}(z_i, x_M')
 where f : ι → ι → (ι →₀ R)
-* Write x_M' as subMin x h
+
+* `UniversalEnvelopingAlgebra.mkAlgHom` : the quotient map from tensor algebra
+* `SymmetricAlgebra.algHom` : The quotient map from tensor algebra
+
+Lemma B: linear representation `ρ : L → gl(Sym(L))` satisfying the two properties:
+1. ρ(x_λ)z_Σ = z_λz_Σ for λ ≤ Σ
+2. ρ(x_λ)z_Σ ≅ z_λz_Σ (mod S_m) when Σ has length m
+
+Lemma C: If `t ∈ T_m ∩ (UniversalEnvelopingAlgebra.mkAlgHom).ker` then the homogeneous component
+of degree m lies in `(SymmetricAlgebra.algHom).ker`.
+
+Final argument: For `t ∈ T_m`, if `UniversalEnvelopingAlgebra.mkAlgHom t ∈ U_{m-1}`, then
+there exists `t' ∈ T_{m-1}`  such that `t - t' ∈ (UniversalEnvelopingAlgebra.mkAlgHom).ker`. Then by
+Lemma C, since the homogeneous component is `t`, `t` lies in `(SymmetricAlgebra.algHom).ker`.
 
 -/
 
 @[expose] public section
 
 variable {ι σ A B R L M : Type*}
+
+section filtration
+
+variable [DecidableEq ι] [AddCommMonoid ι] [PartialOrder ι] [IsOrderedAddMonoid ι] [CommSemiring R]
+  [Semiring A] [Algebra R A] (𝒜 : ι → Submodule R A) [GradedAlgebra 𝒜]
+
+open DirectSum
+
+lemma isRingFiltration_of_graded :
+    IsRingFiltration (fun i ↦ ⨆ j ≤ i, 𝒜 j) (fun i ↦ ⨆ j < i, 𝒜 j) where
+  mono _ j h := by
+    simp only [iSup_le_iff]
+    intro i hi
+    refine le_iSup_of_le i ?_
+    rw [le_iSup_iff]
+    have : i ≤ j := hi.trans h
+    tauto
+  is_le {_ j} h := by
+    simp only [iSup_le_iff]
+    intro i hi
+    refine le_iSup_of_le i ?_
+    rw [le_iSup_iff]
+    have : i < j := lt_of_le_of_lt hi h
+    tauto
+  is_sup _ _ h := by
+    simp only [iSup_le_iff]
+    intro i hi
+    simp only [iSup_le_iff] at h
+    exact h i hi i (Std.IsPreorder.le_refl i)
+  one_mem := mem_of_le_of_mem (S := 𝒜 0)
+    (le_iSup_iff.mpr fun _ h ↦ (by simpa using h 0)) (SetLike.one_mem_graded 𝒜)
+  mul_mem {i j} gi gj hi hj := by
+    classical
+    obtain ⟨fgi, hgi⟩ := (Submodule.mem_biSup_iff_exists_dfinsupp (fun k ↦ k ≤ i) 𝒜 gi).mp hi
+    obtain ⟨fgj, hgj⟩ := (Submodule.mem_biSup_iff_exists_dfinsupp (fun k ↦ k ≤ j) 𝒜 gj).mp hj
+    rw [← hgi, ← hgj]
+    simp only [DFinsupp.lsum_apply_apply, DFinsupp.sumAddHom_apply, DFinsupp.sum,
+      DFinsupp.support_filter, DFinsupp.filter_apply, LinearMap.toAddMonoidHom_coe,
+      Submodule.subtype_apply, Finset.sum_mul_sum]
+    refine sum_mem fun k hk ↦ sum_mem fun l hl ↦ ?_
+    have hki : k ≤ i := by grind
+    have hlj : l ≤ j := by grind
+    simp only [hki, ↓reduceIte, hlj]
+    refine Set.mem_of_subset_of_mem (IsConcreteLE.coe_subset_coe'.mpr (le_sSup ?_)) <|
+      SetLike.mul_mem_graded (Submodule.coe_mem (fgi k)) (Submodule.coe_mem (fgj l))
+    use k + l
+    simp [add_le_add hki hlj]
+
+--def associatedGraded [Ring R] (F : ι → Submodule R R)
+
+end filtration
 
 namespace LieAlgebra.PBW
 
@@ -79,6 +146,7 @@ lemma Finset.sum_sym2_of_ne_swap [AddCommMonoid L] (s : Finset ι) (ij : ι × �
     simp only [Finset.mem_filter] at hab
     exact (habij hab.2).elim
 /-
+ -- induct on basis...
 @[implicit_reducible]
 noncomputable def LieRing.ofStructureConstant [AddCommGroup L] [Module R L] (b : Module.Basis ι R L)
     (f : ι → ι → ι →₀ R) (hfa : ∀ i : ι, f i i = 0) (hfb : ∀ i j : ι, f i j + f j i = 0)
@@ -87,13 +155,15 @@ noncomputable def LieRing.ofStructureConstant [AddCommGroup L] [Module R L] (b :
     LieRing L where
   bracket := (Bracket.ofStructureConstant b b f).bracket
   add_lie x y z := by
-    simp only [Bracket.bracket, map_add, map_smul, Module.Basis.repr_symm_apply]
+    unfold Bracket.bracket Bracket.ofStructureConstant
+    simp only [map_add, map_smul, Module.Basis.repr_symm_apply]
     rw [Finsupp.sum_add_index' (fun _ ↦ by simp)]
     intro i r s
     simp_rw [add_smul]
     rw [Finsupp.sum_add]
   lie_add x y z := by
-    simp only [Bracket.bracket, map_add, Module.Basis.repr_symm_apply]
+    unfold Bracket.bracket Bracket.ofStructureConstant
+    simp only [map_add, Module.Basis.repr_symm_apply]
     rw [← Finsupp.sum_add]
     congr 1
     ext i r
@@ -101,7 +171,8 @@ noncomputable def LieRing.ofStructureConstant [AddCommGroup L] [Module R L] (b :
     intro j s t
     simp [add_smul]
   lie_self x := by
-    simp only [Bracket.bracket, Module.Basis.repr_symm_apply, Finsupp.sum, map_smul]
+    unfold Bracket.bracket Bracket.ofStructureConstant
+    simp only [Module.Basis.repr_symm_apply, Finsupp.sum, map_smul]
     rw [← Finset.sum_product', Finset.sum_cancels_of_partition_cancels (Sym2.Rel.setoid ι)]
     intro ij hij
     by_cases h : ij.1 = ij.2
@@ -111,7 +182,8 @@ noncomputable def LieRing.ofStructureConstant [AddCommGroup L] [Module R L] (b :
       rw [smul_comm, ← smul_add, ← smul_add, ← map_add, hfb ij.1]
       simp
   leibniz_lie x y z := by
-    simp only [Bracket.bracket, Module.Basis.repr_symm_apply, Finsupp.sum, map_smul]
+    unfold Bracket.bracket Bracket.ofStructureConstant
+    simp only [Module.Basis.repr_symm_apply, Finsupp.sum, map_smul]
     sorry
 
 @[implicit_reducible]

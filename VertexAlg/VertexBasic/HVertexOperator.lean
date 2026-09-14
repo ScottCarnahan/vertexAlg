@@ -271,6 +271,29 @@ noncomputable def emb2 {ι : Type*} {Γ : ι → Type*} [∀ i, Zero (Γ i)] (i 
     · simp [h]
   map_smul' _ _ := by ext; simp
 
+/-- Apply a heterogeneous vertex operator to a formal power series whose support is orthogonal to
+the coordinate of the operator. -/
+@[simps]
+def applyPi {ι : Type*} [DecidableEq ι] {Γ : ι → Type*} (s : Finset ι)
+    (i : ι) (h : i ∉ s) [PartialOrder (Γ i)] (A : HVertexOperator (Γ i) R V W) :
+    ((Π j ∈ s, Γ j) → V) →ₗ[R] ((Π j ∈ s.cons i h, Γ j) → W) where
+  toFun x := fun g ↦
+    A.coeff (g i (Finset.mem_cons_self i s)) (x (fun j hj ↦ g j (Finset.mem_cons_of_mem hj)))
+  map_add' _ _ := by ext; simp
+  map_smul' _ _ := by ext; simp
+
+@[simps]
+def applyLexPi {ι : Type*} [DecidableEq ι] {Γ : ι → Type*} (s : Finset ι) (i j : ι) (hi : i ∉ s)
+    (hj : j ∉ s) (hij : i ≠ j) [PartialOrder (Γ i)] [PartialOrder (Γ j)]
+    (A : HVertexOperator (Γ i ×ₗ Γ j) R V W) :
+    ((Π k ∈ s, Γ k) → V) →ₗ[R] ((Π k ∈ (s.cons i hi).cons j (by grind), Γ k) → W) where
+  toFun x := fun g ↦
+    A.coeff (toLex ((g i (Finset.mem_cons_of_mem (s.mem_cons_self i))),
+      (g j ((s.cons i hi).mem_cons_self j))))
+      (x (fun k hk ↦ g k (Finset.mem_cons_of_mem (Finset.mem_cons_of_mem hk))))
+  map_add' _ _ := by ext; simp
+  map_smul' _ _ := by ext; simp
+
 /-- The set of dependent maps `(Π i, Γ i) → V` that are supported in `Π i ∈ s, Γ i` -/
 @[simps]
 def supportMapSpace {ι : Type*} (Γ : ι → Type*) [∀ i, Zero (Γ i)] (s : Set ι) (V) [AddCommGroup V]
@@ -287,7 +310,7 @@ def supportMapSpace {ι : Type*} (Γ : ι → Type*) [∀ i, Zero (Γ i)] (s : S
 /-- Apply a heterogeneous vertex operator to a formal power series whose support is orthogonal to
 the coordinate of the operator. Rather than assume the support is orthogonal (i.e., that `i ∉ s`),
 we simply ignore terms with nonzero `i`th coordinate. -/
-noncomputable def applyPi {ι : Type*} [DecidableEq ι] {Γ : ι → Type*} [∀ i, Zero (Γ i)] (s : Set ι)
+noncomputable def applyPi' {ι : Type*} [DecidableEq ι] {Γ : ι → Type*} [∀ i, Zero (Γ i)] (s : Set ι)
     (i : ι) [PartialOrder (Γ i)] (A : HVertexOperator (Γ i) R V W) :
     ((Π i, Γ i) → V) →ₗ[R]
       supportMapSpace (R := R) (V := W) Γ (insert i s) where
@@ -307,28 +330,28 @@ noncomputable def applyPi {ι : Type*} [DecidableEq ι] {Γ : ι → Type*} [∀
       simp
   map_smul' r x := by ext; simp
 
-lemma applyPi_apply_coe {ι : Type*} [DecidableEq ι] {Γ : ι → Type*} [∀ i, Zero (Γ i)] (s : Set ι)
+lemma applyPi'_apply_coe {ι : Type*} [DecidableEq ι] {Γ : ι → Type*} [∀ i, Zero (Γ i)] (s : Set ι)
     (i : ι) [PartialOrder (Γ i)] (A : HVertexOperator (Γ i) R V W) (x : (Π i, Γ i) → V)
     (g : (i : ι) → Γ i) :
     letI _ (g : (i : ι) → Γ i) := Classical.propDecidable (∃ j, (¬j = i ∧ j ∉ s) ∧ ¬g j = 0)
-    ((applyPi s i A) x : (Π i, Γ i) → W) g = if ∃ j, (¬j = i ∧ j ∉ s) ∧ ¬g j = 0 then 0 else
+    ((applyPi' s i A) x : (Π i, Γ i) → W) g = if ∃ j, (¬j = i ∧ j ∉ s) ∧ ¬g j = 0 then 0 else
       (coeff A (g i)) ((x : (Π i, Γ i) → V) (Function.update g i 0)) :=
   rfl
 
 @[simp]
-lemma applyPi_coeff_of_exists {ι : Type*} [DecidableEq ι] {Γ : ι → Type*} [∀ i, Zero (Γ i)]
+lemma applyPi'_coeff_of_exists {ι : Type*} [DecidableEq ι] {Γ : ι → Type*} [∀ i, Zero (Γ i)]
     (s : Set ι) (i : ι) [PartialOrder (Γ i)] (A : HVertexOperator (Γ i) R V W)
     (x : (Π i, Γ i) → V) (g : (i : ι) → Γ i) (hg : ∃ j, (¬j = i ∧ j ∉ s) ∧ ¬g j = 0) :
-    (A.applyPi s i x : (Π i, Γ i) → W) g = 0 := by
-  simp [applyPi_apply_coe, hg]
+    (A.applyPi' s i x : (Π i, Γ i) → W) g = 0 := by
+  simp [applyPi'_apply_coe, hg]
 
 @[simp]
-lemma applyPi_coeff_of_forall {ι : Type*} [DecidableEq ι] {Γ : ι → Type*} [∀ i, Zero (Γ i)]
+lemma applyPi'_coeff_of_forall {ι : Type*} [DecidableEq ι] {Γ : ι → Type*} [∀ i, Zero (Γ i)]
     (s : Set ι) (i : ι) [PartialOrder (Γ i)] (A : HVertexOperator (Γ i) R V W)
     (x : (Π i, Γ i) → V) (g : (i : ι) → Γ i) (hg : ∀ j, j ∉ insert i s → g j = 0) :
-    (A.applyPi s i x : (Π i, Γ i) → W) g =
+    (A.applyPi' s i x : (Π i, Γ i) → W) g =
       A.coeff (g i) ((x : (Π i, Γ i) → V) (Function.update g i 0)) := by
-  simp only [applyPi_apply_coe]
+  simp only [applyPi'_apply_coe]
   exact if_neg <| not_exists.mpr fun j ↦ by simpa using hg j
 
 
@@ -467,6 +490,14 @@ theorem lexComp_apply_apply_apply_coeff (A : HVertexOperator Γ R V W) (B : HVer
     ((HahnModule.of R).symm (lexComp A B u)).coeff g =
       A.coeff (ofLex g).2 (B.coeff (ofLex g).1 u) := by
   rfl
+
+lemma applyPi_applyPi {ι : Type*} [DecidableEq ι] {Γ : ι → Type*} (s : Finset ι) (i j : ι)
+    (hi : i ∉ s) (hj : j ∉ s) (hij : i ≠ j) [PartialOrder (Γ i)] [PartialOrder (Γ j)]
+    (A : HVertexOperator (Γ i) R U V) (B : HVertexOperator (Γ j) R V W) (x : (Π k ∈ s, Γ k) → U) :
+    applyPi (s.cons i hi) j (by grind) B (applyPi s i hi A x) =
+      applyLexPi s i j hi hj hij (lexComp B A) x := by
+  ext; simp
+
 /-
 /-- The bilinear composition of two heterogeneous vertex operators, yielding a heterogeneous vertex
 operator on the RevLex product. -/
