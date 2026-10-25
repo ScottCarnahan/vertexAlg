@@ -93,10 +93,7 @@ lemma grade_eq (a : A) :
     rw [← hy]
     simp only [grade, monomialMap, LinearEquiv.range_comp, LinearMap.mem_range]
     clear hy
-    induction y using TensorProduct.induction_on with
-    | zero =>
-      use 0
-      simp
+    induction y using TensorProduct.inductionOn with
     | tmul b y =>
       obtain ⟨c, ⟨d, h⟩⟩ := b
       use d ⊗ₜ y
@@ -205,8 +202,7 @@ lemma support_toFinsupp_mapMonomialLieHom {B : Type*} [AddCommMonoid A] [AddComm
     (ha : a ∈ ((toFinsupp R A L) ((mapMonomialLieHom R L f) p)).support) :
     a ∈ Set.range f := by
   rw [Finsupp.mem_support_iff] at ha
-  induction p using TensorProduct.induction_on with
-  | zero => simp at ha
+  induction p using TensorProduct.inductionOn with
   | tmul x y =>
     induction x using AddMonoidAlgebra.induction_linear with
     | zero => simp at ha
@@ -423,12 +419,10 @@ noncomputable instance [DecidableEq A] [AddCommMonoid A] :
     obtain ⟨xj, hxj⟩ := hj
     simp only [← hxi, ← hxj]
     clear hxi hxj
-    induction xi using TensorProduct.induction_on with
-    | zero => simp
+    induction xi using TensorProduct.inductionOn with
     | tmul x y =>
       simp only [LinearMap.rTensor_tmul, Submodule.subtype_apply]
-      induction xj using TensorProduct.induction_on with
-      | zero => simp
+      induction xj using TensorProduct.inductionOn with
       | tmul u v =>
         simp only [LinearMap.rTensor_tmul, Submodule.subtype_apply, ExtendScalars.bracket_tmul]
         simp only [DirectSum.decomposeTensor_apply, LinearMap.mem_range]
@@ -513,8 +507,7 @@ lemma twoCocycle_apply_single [IsAddTorsionFree R] (Φ : LinearMap.BilinForm R L
     ((LieAlgebra.LoopAlgebra.extension R A L Φ hΦ hΦs).twoCocycleOf
     (LieAlgebra.Extension.section_proj_leftInverse (twoCocycleOfBilinear R A L Φ hΦ hΦs))).1
     ((AddMonoidAlgebra.single a r) ⊗ₜ x) p = 0 := by
-  induction p using TensorProduct.induction_on with
-  | zero => simp
+  induction p using TensorProduct.inductionOn with
   | tmul x y =>
     induction x using AddMonoidAlgebra.induction_linear with
     | zero => simp
@@ -534,7 +527,6 @@ lemma twoCocycle_apply_single [IsAddTorsionFree R] (Φ : LinearMap.BilinForm R L
       · simp [h]
   | add u _ _ _ =>
     induction u with
-    | zero => simp_all
     | tmul _ _ =>
       simp only [twoCocycleOf_extension, twoCocycleOfBilinear_coe, twoCochainOfBilinear_apply_apply,
         residuePairing_apply_apply, toFinsupp_single_tmul', Finsupp.sum,

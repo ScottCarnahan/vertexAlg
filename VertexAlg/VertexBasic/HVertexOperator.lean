@@ -73,7 +73,7 @@ theorem arrowCongrLeft_coeff_apply {f : Γ₁ ↪ Γ₂} {A : HVertexOperator Γ
 theorem arrowCongrLeft_coeff_notin_range {f : Γ₁ ↪ Γ₂} {A : HVertexOperator Γ₁ R V W}
     {b : Γ₂} (hb : b ∉ Set.range f) :
     (f.arrowCongrLeft A.coeff) b = 0 :=
-  dif_neg hb
+  dite_eq_right hb
 
 theorem support_arrowCongrLeft_subset {f : Γ₁ ↪ Γ₂} {A : HVertexOperator Γ₁ R V W} :
     (f.arrowCongrLeft A.coeff).support ⊆ Set.range f := by
@@ -352,7 +352,7 @@ lemma applyPi'_coeff_of_forall {ι : Type*} [DecidableEq ι] {Γ : ι → Type*}
     (A.applyPi' s i x : (Π i, Γ i) → W) g =
       A.coeff (g i) ((x : (Π i, Γ i) → V) (Function.update g i 0)) := by
   simp only [applyPi'_apply_coe]
-  exact if_neg <| not_exists.mpr fun j ↦ by simpa using hg j
+  exact ite_eq_right <| not_exists.mpr fun j ↦ by simpa using hg j
 
 
 

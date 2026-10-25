@@ -47,11 +47,11 @@ noncomputable def leadingTerm (x : HahnSeries Γ R) : HahnSeries Γ R :=
 
 @[simp]
 theorem leadingTerm_zero : leadingTerm (0 : HahnSeries Γ R) = 0 :=
-  dif_pos rfl
+  dite_eq_left rfl
 
 theorem leadingTerm_of_ne {x : HahnSeries Γ R} (hx : x ≠ 0) :
     leadingTerm x = single (x.isWF_support.min (support_nonempty_iff.2 hx)) x.leadingCoeff :=
-  dif_neg hx
+  dite_eq_right hx
 
 theorem leadingTerm_ne_iff {x : HahnSeries Γ R} : x ≠ 0 ↔ leadingTerm x ≠ 0 := by
   constructor
@@ -670,9 +670,9 @@ instance [Semiring R] (f : F) :
     by_cases hg : g = 0
     · rw [hg]
       simp
-    · have : (OrderIsoClass.toOrderIso f) g ≠ 0 := by
+    · have : (OrderIso.ofClass f) g ≠ 0 := by
         contrapose! hg
-        rw [show (OrderIsoClass.toOrderIso f) g = f g by rfl, ← this] at hg
+        rw [show (OrderIso.ofClass f) g = f g by rfl, ← this] at hg
         exact EmbeddingLike.injective' f hg
       simp [equivDomainRingHom, this, hg]
 
@@ -707,7 +707,7 @@ theorem equivDomainRingHom_symm_single [NonAssocSemiring R] (f : F) (g : Γ') (r
   ext g'
   by_cases h : f g' = g
   · have hinv : EquivLike.inv f g = g' := EquivLike.inv_apply_eq.mpr h.symm
-    have : OrderIsoClass.toOrderIso f g'= f g' := rfl
+    have : OrderIso.ofClass f g'= f g' := rfl
     simp [equivDomainRingHom, h, hinv, this]
   · have : EquivLike.inv f g ≠ g' := by
       contrapose! h
@@ -945,8 +945,8 @@ theorem piFamily_cons (s : Finset σ) {R} [CommSemiring R] (α : σ → Type*)
   congr 1
   refine prod_congr rfl ?_
   intro i hi
-  rw [dif_pos hi, dif_pos (Or.inr hi)]
-  simp [prodPiCons, dif_neg (ne_of_mem_of_not_mem hi has)]
+  rw [dite_eq_left hi, dite_eq_left (Or.inr hi)]
+  simp [prodPiCons, dite_eq_right (ne_of_mem_of_not_mem hi has)]
 
 theorem hsum_pi_family (s : Finset σ) {R} [CommSemiring R] (α : σ → Type*)
     (t : Π i : σ, SummableFamily Γ R (α i)) :

@@ -56,8 +56,7 @@ omit [Decomposition ℳ] in
 lemma directSumLeft_symm_of (N : Type*) [AddCommMonoid N] [Module R N] {i : ι} (x : (ℳ i) ⊗[R] N) :
     (directSumLeft R R (fun a ↦ ↥(ℳ a)) N).symm ((of (fun i ↦ (ℳ i) ⊗[R] N) i) x) =
       rTensor N (lof R ι (fun i ↦ ℳ i) i) x := by
-  induction x using TensorProduct.induction_on with
-  | zero => simp
+  induction x using TensorProduct.inductionOn with
   | tmul x y =>
     simp only [rTensor_tmul]
     refine (LinearEquiv.symm_apply_eq (directSumLeft R R (fun a ↦ ↥(ℳ a)) N)).mpr ?_
