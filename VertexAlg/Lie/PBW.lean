@@ -97,7 +97,7 @@ lemma isRingFiltration_of_graded :
     have hki : k ≤ i := by grind
     have hlj : l ≤ j := by grind
     simp only [hki, ↓reduceIte, hlj]
-    refine Set.mem_of_subset_of_mem (IsConcreteLE.coe_subset_coe'.mpr (le_sSup ?_)) <|
+    refine Set.mem_of_subset_of_mem (le_sSup (α := Submodule R A) ?_) <|
       SetLike.mul_mem_graded (Submodule.coe_mem (fgi k)) (Submodule.coe_mem (fgj l))
     use k + l
     simp [add_le_add hki hlj]

@@ -309,7 +309,7 @@ instance : SetLike (VertexSubalgebra R V) V where
   coe_injective p q h := by cases p; cases q; congr; exact SetLike.coe_injective h
 
 instance : PartialOrder (VertexSubalgebra R V) :=
-  .ofSetLike (VertexSubalgebra R V) V
+  .ofSetLike (VertexSubalgebra R V)
 
 initialize_simps_projections VertexSubalgebra (carrier → coe, as_prefix coe)
 

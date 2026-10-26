@@ -5,8 +5,8 @@ Authors: Scott Carnahan
 -/
 module
 
-public import Mathlib.Data.Prod.Lex
 public import Mathlib.Order.Hom.Basic
+public import Mathlib.Order.Prod.Lex.Basic
 
 /-!
 # Reverse Lexicographic order

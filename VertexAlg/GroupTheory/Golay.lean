@@ -77,7 +77,7 @@ lemma mem_ker_projectivization_or_mem_complement_range (x : V →ₗ[K] K) (y : 
   · left
     exact (Submodule.mem_projectivization_iff_submodule_le x.ker y).mpr h
   · right
-    obtain ⟨z, hz1, hz2⟩ := SetLike.not_le_iff_exists.mp h
+    obtain ⟨z, hz1, hz2⟩ := IsConcreteLE.not_le_iff_exists.mp h
     let c : Units K := Units.mk0 (x z) hz2
     use ⟨c.inv • z, by rw [Set.mem_preimage, Set.mem_singleton_iff, map_smul, smul_eq_mul,
       Units.inv_eq_val_inv, Units.inv_mul_of_eq (by rfl)]⟩

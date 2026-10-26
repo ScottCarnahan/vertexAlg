@@ -248,7 +248,7 @@ lemma choose_mem_restrictedValue (i : σ) (n : ℕ) :
 lemma choose_eq (i : σ) (n : ℕ) :
     (Ring.choose (X i : MvPolynomial σ ℚ) n) =
     (n.factorial : ℚ)⁻¹ • rename (fun () ↦ i) ((uniqueAlgEquiv ℚ _).symm (descPochhammer ℚ n)) := by
-  have := IsAddTorsionFree.of_module_rat (MvPolynomial σ ℚ)
+  have := HasUniqueDiv.of_module_rat (MvPolynomial σ ℚ)
   apply (nsmul_right_inj (Nat.factorial_ne_zero n)).mp
   rw [← Ring.descPochhammer_eq_factorial_smul_choose, uniqueAlgEquiv_symm_apply, ← smul_assoc]
   have : n.factorial • (n.factorial : ℚ)⁻¹ = 1 := by
