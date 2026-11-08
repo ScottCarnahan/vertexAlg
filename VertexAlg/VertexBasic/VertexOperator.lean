@@ -514,7 +514,6 @@ theorem resProdLeft_neg_one_one_left (A : VertexOperator R V) : resProdLeft (-1 
   rw [finsum_eq_single _ 0 fun _ _ ↦ (by rw [one_ncoeff_ne_neg_one (by omega)]; simp)]
   simp
 
-set_option backward.isDefEq.respectTransparency false in
 @[simp]
 lemma resProdLeft_hasseDeriv_left (m : ℕ) (k : ℤ) (A B : VertexOperator R V) :
     (A.hasseDeriv m).resProdLeft k B =
@@ -649,7 +648,6 @@ theorem resProdRight_one_left (n : ℤ) (A : VertexOperator R V) :
     rw [one_ncoeff_ne_neg_one (by omega)]
     simp
 
-set_option backward.isDefEq.respectTransparency false in
 @[simp]
 lemma resProdRight_hasseDeriv_left (m : ℕ) (k : ℤ) (A B : VertexOperator R V) :
     (A.hasseDeriv m).resProdRight k B =
@@ -687,7 +685,6 @@ lemma resProdRight_hasseDeriv_left (m : ℕ) (k : ℤ) (A B : VertexOperator R V
       Nat.choose_eq_zero_of_lt (lt_of_lt_of_eq hi (zero_add m))]
     simp
 
-set_option backward.isDefEq.respectTransparency false in
 /-- The the `m`-th residue product of vertex operators, as a bilinear map. -/
 @[simps]
 noncomputable def resProd (m : ℤ) :
@@ -699,7 +696,6 @@ noncomputable def resProd (m : ℤ) :
   map_add' A B := by ext; simp; abel
   map_smul' r A := by ext; simp [smul_sub]
 
-set_option backward.isDefEq.respectTransparency false in
 theorem resProd_neg_one_one_left (A : VertexOperator R V) : resProd (-1 : ℤ) 1 A = A := by
   rw [resProd_apply_apply, resProdLeft_neg_one_one_left, resProdRight_one_left, sub_zero]
 
@@ -708,7 +704,6 @@ theorem resProd_ne_neg_one_one_left {n : ℤ} (hn : n ≠ -1) (A : VertexOperato
     resProd n 1 A = 0 := by
   simp [hn]
 
-set_option backward.isDefEq.respectTransparency false in
 theorem resProd_nat_one_right_apply (n : ℕ) (A : VertexOperator R V) :
     resProd n A 1 = 0 := by
   ext v m
@@ -797,7 +792,6 @@ lemma resProdRight_neg_nat_one_right_neg (n k : ℕ) (A : VertexOperator R V) :
     rw [one_ncoeff_ne_neg_one (by grind)]
     simp
 
-set_option backward.isDefEq.respectTransparency false in
 lemma resProd_neg_nat_one_right (n : ℕ) (A : VertexOperator R V) :
     resProd (-n - 1) A 1 = A.hasseDeriv n := by
   simp only [resProd_apply_apply]
@@ -812,7 +806,6 @@ lemma resProd_neg_nat_one_right (n : ℕ) (A : VertexOperator R V) :
     rw [this, resProdRight_neg_nat_one_right_nonneg, resProdLeft_neg_nat_one_right_nonneg,
       sub_neg_eq_add, zero_add]
 
-set_option backward.isDefEq.respectTransparency false in
 lemma resProd_hasseDeriv_left (m : ℕ) (k : ℤ) (A B : VertexOperator R V) :
     (A.hasseDeriv m).resProd k B = Int.negOnePow m • Ring.choose k m • A.resProd (k - m) B := by
   ext v n
@@ -821,14 +814,12 @@ lemma resProd_hasseDeriv_left (m : ℕ) (k : ℤ) (A B : VertexOperator R V) :
 
 -- locality: If `A.IsLocalToOrderLeq B n`, then `A.resProd k B = 0` when `n ≤ k`.
 
-set_option backward.isDefEq.respectTransparency false in
 /-- A product of integer powers of three binomials. -/
 noncomputable abbrev tripleProductLeft (p q r : ℤ) : HahnSeries ((ℤ ×ₗ ℤ) ×ₗ ℤ) R :=
     HahnSeries.binomialPow R (toLex (toLex (1, 0), 0) : (ℤ ×ₗ ℤ) ×ₗ ℤ) (toLex (toLex (0, 1), 0)) p *
     HahnSeries.binomialPow R (toLex (toLex (0, 1), 0) : (ℤ ×ₗ ℤ) ×ₗ ℤ) (toLex (toLex (0, 1), 0)) q *
     HahnSeries.binomialPow R (toLex (toLex (1, 0), 0) : (ℤ ×ₗ ℤ) ×ₗ ℤ) (toLex (toLex (0, 0), 1)) r
 
-set_option backward.isDefEq.respectTransparency false in
 /-- A product of integer powers of three binomials. -/
 noncomputable abbrev tripleProductRight (p q r : ℤ) : HahnSeries (ℤ ×ₗ (ℤ ×ₗ ℤ)) R :=
     HahnSeries.binomialPow R (toLex (1, toLex (0, 0)) : ℤ ×ₗ (ℤ ×ₗ ℤ)) (toLex (0, toLex (1, 0))) p *

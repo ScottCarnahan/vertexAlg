@@ -19,10 +19,10 @@ import VertexAlg.Lie.PBW
 import VertexAlg.OrderAddTorsor
 import VertexAlg.TensorProductDecomposition
 import VertexAlg.VertexBasic.Affine
-import VertexAlg.VertexBasic.Borcherds
 import VertexAlg.VertexBasic.Defs
 import VertexAlg.VertexBasic.HVertexOperator
 import VertexAlg.VertexBasic.Lattice
+import VertexAlg.VertexBasic.StateField
 import VertexAlg.VertexBasic.VertexOperator
 import VertexAlg.toMathlib.Binomial
 import VertexAlg.toMathlib.Decomposition
