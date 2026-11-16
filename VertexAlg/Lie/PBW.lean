@@ -12,6 +12,7 @@ public import Mathlib.Data.List.ToFinsupp
 public import Mathlib.Data.Sym.Sym2
 public import Mathlib.LinearAlgebra.Quotient.Bilinear
 public import Mathlib.RingTheory.FilteredAlgebra.Basic
+public import VertexAlg.toMathlib.DirectSum
 
 /-!
 ## Attempt at PBW
@@ -54,7 +55,7 @@ Lemma C, since the homogeneous component is `t`, `t` lies in `(SymmetricAlgebra.
 
 @[expose] public section
 
-variable {ι σ A B R L M : Type*}
+variable {ι σ A B R L M N : Type*}
 
 section filtration
 
@@ -157,11 +158,14 @@ open DirectSum
 
 variable [CommRing R] [Ring A] [Algebra R A] (F : ι → Submodule R A) (F_lt : ι → Submodule R A)
 
+/-- The graded piece in the associated graded algebra. It is the quotient of a filtered piece by its
+sup submodule. -/
 abbrev gradedPart (i : ι) := (F i) ⧸ (F_lt i).submoduleOf (F i)
 
 --def quotmap (i : ι) : F i → gradedPart F i := Submodule.Quotient.mk
 --instance (i : ι) : AddCommGroup (gradedPart F F_lt i) := inferInstance
 
+/-- The associated graded subalgebra. -/
 abbrev associatedGraded := ⨁ i, gradedPart F F_lt i
 
 namespace AssociatedGraded
@@ -214,26 +218,16 @@ theorem cast_eq_cast {i j} (h : i = j) :
 
 -- see LinearAlgebra/TensorPower/Basic.lean for use of casts.
 
-variable [PartialOrder ι]
-
-lemma DFinsupp.lsum_subtype_coe [DecidableEq ι] [AddMonoid ι] [IsRingFiltration F F_lt]
-    (x : Π₀ i, F i) [(i : ι) → (x : ↥(F i)) → Decidable (x ≠ 0)] (p : ι → Prop) [DecidablePred p] :
-    ((DFinsupp.lsum R) fun i ↦ (F i).subtype) (DFinsupp.filter (fun i ↦ p i) x) =
-      x.sum fun i r ↦ if p i then r else 0 := by
-  simp only [DFinsupp.filter_def, SetLike.coe_sort_coe, DFinsupp.lsum_apply_apply,
-    DFinsupp.sumAddHom_apply, DFinsupp.sum, DFinsupp.mk_apply, Finset.mem_filter,
-    DFinsupp.mem_support_toFun, ne_eq, dite_eq_ite, LinearMap.toAddMonoidHom_coe,
-    Submodule.subtype_apply, Finset.sum_ite, Finset.sum_const_zero, add_zero]
-  exact Finset.sum_congr (by grind) (by grind)
---#find_home! dfinsupp_lsum_coe -- here
-
-omit [PartialOrder ι] in
+--#find_home for --[Mathlib.LinearAlgebra.DFinsupp]
 lemma dfinsupp_mul [DecidableEq ι] (x : Π₀ i, F i) {y : A}
     [(i : ι) → (x : ↥(F i)) → Decidable (x ≠ 0)] :
     (x.sum fun _ r ↦ (r : A)) * y = x.sum fun _ r ↦ r * y := by
   simp only [DFinsupp.sum]
   rw [Finset.sum_mul]
---#find_home! dfinsupp_mul --[Mathlib.LinearAlgebra.DFinsupp]
+
+section
+
+variable [PartialOrder ι]
 
 lemma mul_mem_f_lt [AddCommMonoid ι] [AddRightStrictMono ι]
     [IsRingFiltration F F_lt] (i j : ι) {x y : A} (hx : x ∈ F_lt i) (hy : y ∈ F j) :
@@ -269,9 +263,80 @@ lemma mul_mem_f_lt' [AddCommMonoid ι] [AddLeftStrictMono ι]
     refine IsFiltration.is_le <| add_lt_add_right hk i
   · simp [hk]
 
+end
 
-variable [AddCommMonoid ι] [IsOrderedCancelAddMonoid ι] [IsRingFiltration F F_lt]
+/-- The Rees algebra of a filtered ring. It is a graded algebra over `AddMonoidAlgebra R ι`, and
+`⨁ i, F_lt i` is the homogeneous ideal whose quotient is the associated graded algebra. -/
+abbrev reesAlg := ⨁ i, F i
 
+--#synth Algebra R (reesAlg F)
+-- works given [DecidableEq ι] [PartialOrder ι] [AddCommMonoid ι] [IsRingFiltration F F_lt]
+
+/-- The homogeneous part of a Rees algebra. -/
+def reesPart [DecidableEq ι] : ι → Submodule R (reesAlg F) := part R (fun i ↦ F i)
+
+lemma mem_reesPart_iff_exists [DecidableEq ι] (i : ι) (x : reesAlg F) :
+    x ∈ reesPart F i ↔ ∃ y : F i, of (fun i ↦ F i) i y = x := by
+  constructor
+  · intro hx
+    use (mem_part_exist_of R (fun i ↦ F i) i ⟨x, hx⟩).choose
+    exact (mem_part_exist_of R (fun i ↦ F i) i ⟨x, hx⟩).choose_spec
+  · intro h
+    obtain ⟨y, hy⟩ := h
+    simp only [reesPart, part, LinearMap.mem_range, lof_eq_of]
+    use y
+
+/-- The linear map from `F i` to `reesPart F i` -/
+noncomputable def toReesPart [DecidableEq ι] (i : ι) : F i ≃ₗ[R] reesPart F i :=
+  LinearEquiv.ofInjective (lof R ι (fun i ↦ F i) i)
+   (by intro x y h; simp only [lof_eq_of] at h; exact of_injective i h)
+
+@[simp]
+lemma toReesPart_apply [DecidableEq ι] (i : ι) (a : F i) :
+    toReesPart F i a = of (fun i ↦ F i) i a := rfl
+
+variable [PartialOrder ι] [AddCommMonoid ι] [IsOrderedCancelAddMonoid ι] [IsRingFiltration F F_lt]
+
+instance [DecidableEq ι] :
+    GradedMonoid.GMul (fun (i : ι) ↦ (reesPart F i)) where
+  mul {i j} a b := by
+    refine ⟨a.1 * b.1, ?_⟩
+    obtain ⟨_, ha⟩ := mem_part_exist_of R (fun i ↦ F i) i a
+    obtain ⟨_, hb⟩ := mem_part_exist_of R (fun i ↦ F i) j b
+    rw [← ha, ← hb, of_mul_of]
+    simp [reesPart, part, lof_eq_of, exists_apply_eq_apply]
+
+/-
+noncomputable instance [DecidableEq ι] :
+    GradedRing (fun i ↦ (reesPart F i)) where
+  one_mem := by
+    simp only [reesPart, part, LinearMap.mem_range]
+    use 1
+    rw [lof_eq_of, one_def]
+    congr
+  mul_mem {i j} a b ha hb := by
+    obtain ⟨a', ha'⟩ := mem_part_exist_of R (fun i ↦ F i) i ⟨a, ha⟩
+    obtain ⟨b', hb'⟩ := mem_part_exist_of R (fun i ↦ F i) j ⟨b, hb⟩
+    simp only at ha' hb'
+    rw [← ha', ← hb', of_mul_of]
+    simp [reesPart, part, lof_eq_of, exists_apply_eq_apply]
+  decompose' := map (fun i ↦ (toReesPart F i))
+  left_inv x := by
+    ext i
+    simp [reesPart, part]
+
+
+    sorry
+  right_inv x := by
+    ext i j
+    simp [toReesPart, reesPart, part]
+
+
+    sorry
+-/
+--instance Ideal rees
+
+/-- The multiplication on filtered pieces -/
 def filteredMul (i j : ι) : F i →ₗ[R] F j →ₗ[R] F (i + j) where
   toFun x := {
     toFun y := ⟨x.val * y.val, SetLike.mul_mem_graded x.2 y.2⟩
@@ -286,6 +351,7 @@ lemma mem_lt_of_mul_left (i j : ι) {x y : A} (hx : x ∈ F i) (hxlt : x ∈ F_l
   simp only [filteredMul, LinearMap.coe_mk, AddHom.coe_mk]
   exact mul_mem_f_lt F F_lt _ _ hxlt hy
 
+/-- part of the multiplication on the associated graded -/
 noncomputable def mulQuotient (i j : ι) :
     F i →ₗ[R] F j →ₗ[R] gradedPart F F_lt (i + j) :=
   (filteredMul F F_lt i j).compr₂ (Submodule.mkQ _)
@@ -374,14 +440,16 @@ end
 
 namespace LieAlgebra.PBW
 
-variable [CommRing R] [LinearOrder ι]
+variable {R ι : Type*} [CommRing R] [LinearOrder ι]
 
+/-- The bracket given by the structure constant -/
 @[implicit_reducible]
 noncomputable def Bracket.ofStructureConstant [AddCommGroup L] [Module R L]
     (bL : Module.Basis ι R L) [AddCommGroup M] [Module R M] (bM : Module.Basis σ R M)
     (f : ι → σ → σ →₀ R) : Bracket L M where
   bracket x y := (bL.repr x).sum fun i r ↦ (bM.repr y).sum fun j s ↦ bM.repr.symm (r • s • (f i j))
 
+/-- The structure constant of a Lie algebra -/
 noncomputable def structureConstant [LieRing L] [LieAlgebra R L] (b : Module.Basis ι R L) :
     ι → ι → ι →₀ R :=
   fun i ↦ fun j ↦ b.repr ⁅b.repr.symm (Finsupp.single i 1), b.repr.symm (Finsupp.single j 1)⁆

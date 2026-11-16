@@ -272,7 +272,7 @@ theorem coe_mk (s : Submodule R V) (h1) (hm) :
 theorem mem_mk (s : Submodule R V) (h1) (hm) (x) :
     x ∈ VertexSubalgebra.mk (R := R) s h1 hm ↔ x ∈ s :=
   .rfl
-
+/-
 instance : Bot (VertexSubalgebra R V) :=
   ⟨⟨Submodule.span R {(1 : V)}, by simp, fun {a b} ha hb n ↦ by
     rw [Submodule.carrier_eq_coe, SetLike.mem_coe, Submodule.mem_span_singleton] at ha hb
@@ -285,7 +285,7 @@ instance : Bot (VertexSubalgebra R V) :=
     · simp [h, VertexAlgebra.unit_right, Submodule.mem_span_singleton]
     · sorry
     ⟩⟩
-
+-/
 instance : Inhabited (Subsemiring R) :=
   ⟨⊥⟩
 
@@ -306,7 +306,6 @@ instance : InfSet (Subsemiring R) :=
 theorem coe_sInf (S : Set (Subsemiring R)) : ((sInf S : Subsemiring R) : Set R) = ⋂ s ∈ S, ↑s :=
   rfl
 
-@[simp]
 theorem mem_sInf {S : Set (Subsemiring R)} {x : R} : x ∈ sInf S ↔ ∀ p ∈ S, x ∈ p :=
   Set.mem_iInter₂
 

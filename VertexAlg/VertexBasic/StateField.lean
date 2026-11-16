@@ -128,7 +128,7 @@ sufficiently large `N`.  That is, the vertex operators commute up to finite orde
 diagonal. -/
 def IsLocal (a b : V) : Prop :=
   ∃ n, IsLocalToOrderLeq (Y a) (Y b) n
--- was borcherdsSum2 R a b c r s t + borcherdsSum3 R a b c r s t = 0
+-- was borcherdsSum₂ R a b c r s t + borcherdsSum₃ R a b c r s t = 0
 -- weak associativity needs to be changed to the vertex operator definition.
 -/
 
@@ -163,20 +163,20 @@ end Unital
 
 /-- The first sum in the Borcherds identity, giving the `x^t z^s` coefficient of
 `x^r (1 + z/x)^r (a(x)b)(z)c`. -/
-noncomputable abbrev borcherdsSum1 (a b c : V) (r s t : ℤ) : V :=
+noncomputable abbrev borcherdsSum₁ (a b c : V) (r s t : ℤ) : V :=
   (Finset.range (-t - order Y a b).toNat).sum
     (fun i ↦ (Ring.choose r i) • ncoeff (Y (ncoeff (Y a) (t+i) b)) (r+s-i) c)
 
 /-- The second sum in the Borcherds identity, giving the `y^r z^s` coefficient of
 `y^t (1 - z/y)^t a(y)b(z)c`. -/
-noncomputable abbrev borcherdsSum2 (a b c : V) (r s t : ℤ) : V :=
+noncomputable abbrev borcherdsSum₂ (a b c : V) (r s t : ℤ) : V :=
   Finset.sum (Finset.range (Int.toNat (-s - order Y b c)))
     (fun i ↦ (Int.negOnePow i) • (Ring.choose t i) • ncoeff (Y a) (r+t-i)
     (ncoeff (Y b) (s+i) c))
 
 /-- The third sum in the Borcherds identity, giving the `y^r z^s` coefficient of
 `-(-y)^t (1 - y/z)^t b(z)a(y)c`. -/
-noncomputable abbrev borcherdsSum3 (a b c : V) (r s t : ℤ) : V :=
+noncomputable abbrev borcherdsSum₃ (a b c : V) (r s t : ℤ) : V :=
   Finset.sum (Finset.range (Int.toNat (-r - order Y a c)))
     (fun i ↦ (t+i+1).negOnePow • (Ring.choose t i) • ncoeff (Y b) (s+t-i)
     (ncoeff (Y a) (r+i) c))
@@ -185,32 +185,32 @@ noncomputable abbrev borcherdsSum3 (a b c : V) (r s t : ℤ) : V :=
 power-series form.  It is a formal distribution analogue of the combination of commutativity and
 associativity. -/
 noncomputable abbrev borcherdsId (a b c : V) (r s t : ℤ) : Prop :=
-  borcherdsSum1 Y a b c r s t = borcherdsSum2 Y a b c r s t + borcherdsSum3 Y a b c r s t
+  borcherdsSum₁ Y a b c r s t = borcherdsSum₂ Y a b c r s t + borcherdsSum₃ Y a b c r s t
 
 /-- The weak associativity property for vertex algebras (needs fixing). It should be that
 `Y(Y(a,x)b,y) ∼ Y(a,x + y) Y(b,y)` -/
 def weakAssociativity (a b c : V) (r s t : ℤ) : Prop :=
-  borcherdsSum1 Y a b c r s t = borcherdsSum2 Y a b c r s t
+  borcherdsSum₁ Y a b c r s t = borcherdsSum₂ Y a b c r s t
 
 theorem associativity_left (a b c : V) (s t : ℤ) :
-    borcherdsSum1 Y a b c 0 s t = (Y ((Y a).ncoeff t b)).ncoeff s c := by
+    borcherdsSum₁ Y a b c 0 s t = (Y ((Y a).ncoeff t b)).ncoeff s c := by
   cases h : (Int.toNat (-t - order Y a b)) with
     | zero =>
-      simp [borcherdsSum1, h, ncoeff_zero_if_neg_order_leq Y a b t (by lia)]
+      simp [borcherdsSum₁, h, ncoeff_zero_if_neg_order_leq Y a b t (by lia)]
     | succ n =>
-      rw [borcherdsSum1, h, Finset.eventually_constant_sum ?_ (Nat.one_le_iff_ne_zero.mpr
+      rw [borcherdsSum₁, h, Finset.eventually_constant_sum ?_ (Nat.one_le_iff_ne_zero.mpr
         (Nat.succ_ne_zero n)), Finset.sum_range_one, zero_add, Ring.choose_zero_right (0 : ℤ),
         one_smul, Nat.cast_zero, add_zero, sub_zero]
       intro i hi
       rw [Ring.choose_zero_pos ℤ (by lia), zero_smul]
 
-theorem associativity_right (a b c : V) (s t : ℤ) : borcherdsSum2 Y a b c 0 s t +
-    borcherdsSum3 Y a b c 0 s t = (Finset.range (-s - order Y b c).toNat).sum
+theorem associativity_right (a b c : V) (s t : ℤ) : borcherdsSum₂ Y a b c 0 s t +
+    borcherdsSum₃ Y a b c 0 s t = (Finset.range (-s - order Y b c).toNat).sum
     (fun i ↦ (Int.negOnePow i) • (Ring.choose (t : ℤ) i) •
       ncoeff (Y a) (t-i) (ncoeff (Y b) (s+i) c)) +
     (Finset.range (- order Y a c).toNat).sum (fun i ↦ (t+i+1).negOnePow •
     (Ring.choose t i) • ncoeff (Y b) (s+t-i) (ncoeff (Y a) i c)) := by
-  unfold borcherdsSum2 borcherdsSum3
+  unfold borcherdsSum₂ borcherdsSum₃
   simp only [neg_zero, zero_sub, zero_add]
 
 theorem borcherdsId_at_zero_iff_associativity (a b c : V) (s t : ℤ) :
@@ -219,21 +219,21 @@ theorem borcherdsId_at_zero_iff_associativity (a b c : V) (s t : ℤ) :
   rw [associativity_left, associativity_right]
   exact Eq.congr rfl rfl
 
-theorem commutator_right_2 (a b c : V) (r s : ℤ) : borcherdsSum2 Y a b c r s 0 =
+theorem commutator_right_2 (a b c : V) (r s : ℤ) : borcherdsSum₂ Y a b c r s 0 =
     ncoeff (Y a) r (ncoeff (Y b) s c) := by
   cases h : (Int.toNat (-s - order Y b c)) with
   | zero =>
-    simp [borcherdsSum2, h, ncoeff_zero_if_neg_order_leq Y b c s (by lia)]
+    simp [borcherdsSum₂, h, ncoeff_zero_if_neg_order_leq Y b c s (by lia)]
   | succ n =>
-    rw [borcherdsSum2, h, Finset.eventually_constant_sum ?_ (Nat.one_le_iff_ne_zero.mpr
+    rw [borcherdsSum₂, h, Finset.eventually_constant_sum ?_ (Nat.one_le_iff_ne_zero.mpr
         (Nat.succ_ne_zero n)), Finset.sum_range_one, add_zero, Ring.choose_zero_right (0 : ℤ),
         one_smul, Nat.cast_zero, Int.negOnePow_zero, one_smul, add_zero, sub_zero]
     intro i hi
     rw [Ring.choose_zero_pos ℤ (by lia), zero_smul, smul_zero]
 
-theorem commutator_right_3 (a b c : V) (r s : ℤ) : borcherdsSum3 Y a b c r s 0 =
+theorem commutator_right_3 (a b c : V) (r s : ℤ) : borcherdsSum₃ Y a b c r s 0 =
     -ncoeff (Y b) s (ncoeff (Y a) r c) := by
-  unfold borcherdsSum3
+  unfold borcherdsSum₃
   cases h : (Int.toNat (-r - order Y a c)) with
   | zero =>
     simp [ncoeff_zero_if_neg_order_leq Y a c r (by lia)]
@@ -246,26 +246,26 @@ theorem commutator_right_3 (a b c : V) (r s : ℤ) : borcherdsSum3 Y a b c r s 0
 
 theorem borcherdsId_at_zero_iff_commutatorFormula (a b c : V) (r s : ℤ) :
     borcherdsId Y a b c r s 0 ↔ commutatorFormula Y a b c r s := by
-  unfold borcherdsId commutatorFormula borcherdsSum1
+  unfold borcherdsId commutatorFormula borcherdsSum₁
   rw [commutator_right_2, commutator_right_3, ← sub_eq_add_neg, neg_zero, zero_sub]
   simp_rw [zero_add]
   exact eq_comm
 
-theorem borcherdsSum1_eq_zero (a b c : V) (r s t : ℤ) (h : -order Y a b ≤ t) :
-    borcherdsSum1 Y a b c r s t = 0 := by
-  unfold borcherdsSum1
+theorem borcherdsSum₁_eq_zero (a b c : V) (r s t : ℤ) (h : -order Y a b ≤ t) :
+    borcherdsSum₁ Y a b c r s t = 0 := by
+  unfold borcherdsSum₁
   have hrange : Int.toNat (-t - order Y a b) = 0 := by
     rw [Int.toNat_eq_zero, tsub_le_iff_right, zero_add, neg_le]
     exact h
   rw [hrange, Finset.range_zero, Finset.sum_empty]
 
-theorem locality_left_eq_borcherdsSum2 (a b c : V) (r s : ℤ) :
+theorem locality_left_eq_borcherdsSum₂ (a b c : V) (r s : ℤ) :
     (Finset.sum (Finset.HasAntidiagonal.antidiagonal (Int.toNat (-s - order Y b c))) fun m ↦
     (Int.negOnePow m.2) • Nat.choose (Int.toNat (-s - order Y b c)) m.2 •
     (HVertexOperator.coeff (Y a) (-r - 1 - m.1))
     ((HVertexOperator.coeff (Y b) (-s - 1 - m.2)) c)) =
-    borcherdsSum2 Y a b c r s (Int.toNat (-s - order Y b c)) := by
-  unfold borcherdsSum2 ncoeff
+    borcherdsSum₂ Y a b c r s (Int.toNat (-s - order Y b c)) := by
+  unfold borcherdsSum₂ ncoeff
   rw [Finset.Nat.antidiagonal_eq_map']
   simp_all only [Finset.sum_map, LinearMap.coe_mk, AddHom.coe_mk]
   rw [Finset.eventually_constant_sum ?_ (Nat.le_succ (Int.toNat (-s - order Y b c)))]
@@ -291,15 +291,14 @@ theorem locality_left_eq_borcherdsSum2 (a b c : V) (r s : ℤ) :
   rw [smul_eq_zero_of_right]
   grind only [Function.Embedding.coeFn_mk, = map_zero]
 
-theorem locality_right_eq_borcherdsSum3 (a b c : V) (r s : ℤ) : Finset.sum
+theorem locality_right_eq_borcherdsSum₃ (a b c : V) (r s : ℤ) : Finset.sum
     (Finset.HasAntidiagonal.antidiagonal (Int.toNat (-r - order Y a c)))
       (fun m => -(Int.negOnePow m.2) • (Nat.choose (Int.toNat (-r - order Y a c)) m.2) •
       HVertexOperator.coeff (Y b) (-s - 1 - m.2) (HVertexOperator.coeff (Y a) (-r - 1 - m.1) c)) =
-    borcherdsSum3 Y a b c r s (Int.toNat (-r - order Y a c)) := by
-  unfold borcherdsSum3 ncoeff
+    borcherdsSum₃ Y a b c r s (Int.toNat (-r - order Y a c)) := by
+  dsimp [borcherdsSum₃, ncoeff]
   rw [Finset.Nat.antidiagonal_eq_map]
-  simp only [neg_sub, Units.neg_smul, Finset.sum_map, Int.ofNat_toNat, LinearMap.coe_mk,
-    AddHom.coe_mk]
+  simp only [neg_sub, Units.neg_smul, Finset.sum_map, Int.ofNat_toNat]
   erw [Function.Embedding.coeFn_mk]
   simp only [neg_add_rev]
   rw [Finset.eventually_constant_sum ?_ (Nat.le_succ (Int.toNat (-r - order Y a c)))]
@@ -323,15 +322,15 @@ theorem locality_right_eq_borcherdsSum3 (a b c : V) (r s : ℤ) : Finset.sum
 /-!
 theorem locality_if_Borcherds_sums_2_3_eq (a b : V) (h : ∀ (c : V) (r s : ℤ)
     (t : ℕ), Int.toNat (-s - order R b c) ≤ t → Int.toNat (-r - order R a c) ≤ t →
-    borcherdsSum2 R a b c r s t = borcherdsSum3 R a b c r s t) : locality R a b := by
+    borcherdsSum₂ R a b c r s t = borcherdsSum₃ R a b c r s t) : locality R a b := by
   unfold locality isLocal isLocalToOrderLeq
   --
---  rw [locality_right_eq_borcherdsSum3 a b c ]
+--  rw [locality_right_eq_borcherdsSum₃ a b c ]
   sorry
 theorem Borcherds_sums_2_3_eq_if_locality (a b c : V) (r s t : ℤ)
     (h₂ : Int.toNat (-s - order R b c) ≤ t) (h₃ : Int.toNat (-r - order R a c) ≤ t)
-    (h : locality R a b) : borcherdsSum2 R a b c r s t = borcherdsSum3 R a b c r s t := by
-  --rw [← locality_right_eq_borcherdsSum3, ]
+    (h : locality R a b) : borcherdsSum₂ R a b c r s t = borcherdsSum₃ R a b c r s t := by
+  --rw [← locality_right_eq_borcherdsSum₃, ]
   sorry
 theorem borcherdsId_at_large_t_iff_locality (a b c : V) (r s t : ℤ) (h : - order R a b ≤ t) :
     borcherdsId R a b c r s t ↔ locality R a b := by
@@ -342,8 +341,8 @@ theorem borcherdsId_at_large_t_iff_locality (a b c : V) (r s t : ℤ) (h : - ord
 -/
 
 theorem weak_assoc_right (a b c : V) (r s t : ℤ) (h : r ≥ -order Y a c) :
-    borcherdsSum3 Y a b c r s t = 0 := by
-  unfold borcherdsSum3
+    borcherdsSum₃ Y a b c r s t = 0 := by
+  dsimp [borcherdsSum₃]
   have hrange : Int.toNat (-r - order Y a c) = 0 := by
     rw [Int.toNat_eq_zero, tsub_le_iff_right, zero_add, neg_le]
     exact h
@@ -360,10 +359,10 @@ theorem toNat_eq_sub_toNat_add (t : ℤ) (n : ℕ) (h : Int.toNat t = Nat.succ n
     Int.toNat t = Int.toNat (t - 1) + 1 := by
   rw [Int.pred_toNat, h, Nat.succ_sub_succ_eq_sub, tsub_zero]
 
-theorem borcherds1Recursion
-    (a b c : V) (r s t : ℤ) : borcherdsSum1 Y a b c (r + 1) s t =
-    borcherdsSum1 Y a b c r (s + 1) t + borcherdsSum1 Y a b c r s (t + 1) := by
-  unfold borcherdsSum1
+theorem borcherdsRecursion₁
+    (a b c : V) (r s t : ℤ) : borcherdsSum₁ Y a b c (r + 1) s t =
+    borcherdsSum₁ Y a b c r (s + 1) t + borcherdsSum₁ Y a b c r s (t + 1) := by
+  dsimp only [borcherdsSum₁]
   cases h : (Int.toNat (-t - order Y a b)) with
   | zero =>
     have : (-(t + 1) - Y.order a b).toNat = 0 := by lia
@@ -381,10 +380,10 @@ theorem borcherds1Recursion
     have h2 : r + (1 + s) - (n + 1) = r + s - n := by omega
     rw [h2, add_comm _ 1]
 
-theorem borcherds2Recursion
-    (a b c : V) (r s t : ℤ) : borcherdsSum2 Y a b c (r + 1) s t =
-    borcherdsSum2 Y a b c r (s + 1) t + borcherdsSum2 Y a b c r s (t + 1) := by
-  unfold borcherdsSum2
+theorem borcherdsRecursion₂
+    (a b c : V) (r s t : ℤ) : borcherdsSum₂ Y a b c (r + 1) s t =
+    borcherdsSum₂ Y a b c r (s + 1) t + borcherdsSum₂ Y a b c r s (t + 1) := by
+  dsimp only [borcherdsSum₂]
   cases h : (Int.toNat (-s - order Y b c)) with
     | zero =>
       have : (-(s + 1) - Y.order b c).toNat = 0 := by lia
@@ -400,10 +399,10 @@ theorem borcherds2Recursion
           (add_eq_of_eq_neg_add (by congr 1 <;> simp [Int.negOnePow_succ] <;> lia)).symm
       · simp; lia
 
-theorem borcherds3Recursion
-    (a b c : V) (r s t : ℤ) : borcherdsSum3 Y a b c (r + 1) s t =
-    borcherdsSum3 Y a b c r (s + 1) t + borcherdsSum3 Y a b c r s (t + 1) := by
-  unfold borcherdsSum3
+theorem borcherdsRecursion₃
+    (a b c : V) (r s t : ℤ) : borcherdsSum₃ Y a b c (r + 1) s t =
+    borcherdsSum₃ Y a b c r (s + 1) t + borcherdsSum₃ Y a b c r s (t + 1) := by
+  dsimp only [borcherdsSum₃]
   cases h : (Int.toNat (-r - order Y a c)) with
     | zero =>
       have : (-(r + 1) - Y.order a c).toNat = 0 := by lia
@@ -427,81 +426,35 @@ theorem borcherds3Recursion
             simp [← add_assoc, Int.negOnePow_succ, add_right_comm t 1]; lia
         · simp [Int.negOnePow_succ]; lia
 
-lemma borcherdsId_shift_3 (a b c : V) (r s t : ℤ) (h1 : borcherdsId Y a b c (r + 1) s t)
+lemma borcherdsId_shift₃ (a b c : V) (r s t : ℤ) (h1 : borcherdsId Y a b c (r + 1) s t)
     (h2 : borcherdsId Y a b c r (s + 1) t) :
     borcherdsId Y a b c r s (t + 1) := by
-  rw [borcherdsId] at *
-  rwa [borcherds1Recursion, h2, borcherds2Recursion, add_assoc, add_assoc, add_right_inj,
-    borcherds3Recursion, add_left_comm, add_right_inj] at h1
+  dsimp only [borcherdsId] at *
+  rwa [borcherdsRecursion₁, h2, borcherdsRecursion₂, add_assoc, add_assoc, add_right_inj,
+    borcherdsRecursion₃, add_left_comm, add_right_inj] at h1
 
-lemma borcherdsId_shift_2 (a b c : V) (r s t : ℤ) (h1 : borcherdsId Y a b c (r + 1) s t)
+lemma borcherdsId_shift₂ (a b c : V) (r s t : ℤ) (h1 : borcherdsId Y a b c (r + 1) s t)
     (h3 : borcherdsId Y a b c r s (t + 1)) :
     borcherdsId Y a b c r (s + 1) t := by
-  rw [borcherdsId] at *
-  rwa [borcherds1Recursion, h3, borcherds2Recursion, add_left_comm,
-    add_comm _ (borcherdsSum2 Y a b c r s (t + 1)), add_assoc, add_right_inj, borcherds3Recursion,
+  dsimp only [borcherdsId] at *
+  rwa [borcherdsRecursion₁, h3, borcherdsRecursion₂, add_left_comm,
+    add_comm _ (borcherdsSum₂ Y a b c r s (t + 1)), add_assoc, add_right_inj, borcherdsRecursion₃,
     ← add_assoc, add_left_inj] at h1
 
-lemma borcherdsId_shift_1 (a b c : V) (r s t : ℤ) (h2 : borcherdsId Y a b c r (s + 1) t)
+lemma borcherdsId_shift₁ (a b c : V) (r s t : ℤ) (h2 : borcherdsId Y a b c r (s + 1) t)
     (h3 : borcherdsId Y a b c r s (t + 1)) :
     borcherdsId Y a b c (r + 1) s t := by
-  rw [borcherdsId] at *
-  rw [borcherds1Recursion, borcherds2Recursion, borcherds3Recursion, h2, h3]
+  dsimp only [borcherdsId] at *
+  rw [borcherdsRecursion₁, borcherdsRecursion₂, borcherdsRecursion₃, h2, h3]
   abel
 
-lemma borcherdsId_of_1_le (a b c : V) (q r s t : ℤ) (h : ∀ u v : ℤ, borcherdsId Y a b c r u v)
-    (hq : r ≤ q) :
-    borcherdsId Y a b c q s t := by
-  suffices ∀ (n : ℕ), borcherdsId Y a b c (r + n) s t by
-    rw [show q = r + (q - r).toNat by lia]
-    exact this (q - r).toNat
-  intro n
-  induction n generalizing s t with
-  | zero =>
-    rw [CharP.cast_eq_zero, add_zero]
-    exact h s t
-  | succ n ih =>
-    rw [Nat.cast_add, Nat.cast_one, ← add_assoc]
-    exact borcherdsId_shift_1 Y a b c (r + n) s t (ih (s + 1) t) (ih s (t + 1))
-
-lemma borcherdsId_of_2_le (a b c : V) (q r s t : ℤ) (h : ∀ u v : ℤ, borcherdsId Y a b c u s v)
-    (hq : s ≤ q) :
-    borcherdsId Y a b c r q t := by
-  suffices ∀ (n : ℕ), borcherdsId Y a b c r (s + n) t by
-    rw [show q = s + (q - s).toNat by lia]
-    exact this (q - s).toNat
-  intro n
-  induction n generalizing r t with
-  | zero =>
-    rw [CharP.cast_eq_zero, add_zero]
-    exact h r t
-  | succ n ih =>
-    rw [Nat.cast_add, Nat.cast_one, ← add_assoc]
-    exact borcherdsId_shift_2 Y a b c r (s + n) t (ih (r + 1) t) (ih r (t + 1))
-
-lemma borcherdsId_of_3_le (a b c : V) (q r s t : ℤ) (h : ∀ u v : ℤ, borcherdsId Y a b c u v t)
-    (hq : t ≤ q) :
-    borcherdsId Y a b c r s q := by
-  suffices ∀ (n : ℕ), borcherdsId Y a b c r s (t + n) by
-    rw [show q = t + (q - t).toNat by lia]
-    exact this (q - t).toNat
-  intro n
-  induction n generalizing r s with
-  | zero =>
-    rw [CharP.cast_eq_zero, add_zero]
-    exact h r s
-  | succ n ih =>
-    rw [Nat.cast_add, Nat.cast_one, ← add_assoc]
-    exact borcherdsId_shift_3 Y a b c r s (t + n) (ih (r + 1) s) (ih r (s + 1))
-
-lemma borcherdsId_of_antidiag_1 (a b c : V) (r s t : ℤ)
-    (h : ∃ (n : ℕ), ∀ (k : ℕ), k ≤ n → borcherdsId Y a b c (r - n) (s + k) (t + n - k)) :
+lemma borcherdsId_of_antidiag₁ (a b c : V) (r s t : ℤ) (n : ℕ)
+    (hn : ∀ (k : ℕ), k ≤ n → borcherdsId Y a b c (r - n) (s + k) (t + n - k)) :
     borcherdsId Y a b c r s t := by
-  obtain ⟨n, hn⟩ := h
   have (m : ℕ) (hm : ∀ k ≤ m, borcherdsId Y a b c (r - m) (s + k) (t + m - k)) (k : ℕ)
       (hk : k < m) :
       borcherdsId Y a b c (r - m + 1) (s + k) (t + m - k - 1) := by
-    apply borcherdsId_shift_1
+    apply borcherdsId_shift₁
     · rw [add_assoc, show t + m - k - 1 = t + m - (k + 1) by lia]
       exact hm (k + 1) <| Order.add_one_le_iff.mpr hk
     · rw [Int.sub_add_cancel]
@@ -522,14 +475,13 @@ lemma borcherdsId_of_antidiag_1 (a b c : V) (r s t : ℤ)
       exact ih l (by lia) (by lia)
   simpa using this n 0
 
-lemma borcherdsId_of_antidiag_2 (a b c : V) (r s t : ℤ)
-    (h : ∃ (n : ℕ), ∀ (k : ℕ), k ≤ n → borcherdsId Y a b c (r + k) (s - n) (t + n - k)) :
+lemma borcherdsId_of_antidiag₂ (a b c : V) (r s t : ℤ) (n : ℕ)
+    (hn : ∀ (k : ℕ), k ≤ n → borcherdsId Y a b c (r + k) (s - n) (t + n - k)) :
     borcherdsId Y a b c r s t := by
-  obtain ⟨n, hn⟩ := h
   have (m : ℕ) (hm : ∀ k ≤ m, borcherdsId Y a b c (r + k) (s - m) (t + m - k)) (k : ℕ)
       (hk : k < m) :
       borcherdsId Y a b c (r + k) (s - m + 1) (t + m - k - 1) := by
-    apply borcherdsId_shift_2
+    apply borcherdsId_shift₂
     · rw [add_assoc, show t + m - k - 1 = t + m - (k + 1) by lia]
       exact hm (k + 1) <| Order.add_one_le_iff.mpr hk
     · rw [Int.sub_add_cancel]
@@ -550,14 +502,13 @@ lemma borcherdsId_of_antidiag_2 (a b c : V) (r s t : ℤ)
       exact ih l (by lia) (by lia)
   simpa using this n 0
 
-lemma borcherdsId_of_antidiag_3 (a b c : V) (r s t : ℤ)
-    (h : ∃ (n : ℕ), ∀ (k : ℕ), k ≤ n → borcherdsId Y a b c (r + k) (s + n - k) (t - n)) :
+lemma borcherdsId_of_antidiag₃ (a b c : V) (r s t : ℤ) (n : ℕ)
+    (hn : ∀ (k : ℕ), k ≤ n → borcherdsId Y a b c (r + k) (s + n - k) (t - n)) :
     borcherdsId Y a b c r s t := by
-  obtain ⟨n, hn⟩ := h
   have (m : ℕ) (hm : ∀ k ≤ m, borcherdsId Y a b c (r + k) (s + m - k) (t - m)) (k : ℕ)
       (hk : k < m) :
       borcherdsId Y a b c (r + k) (s + m - k - 1) (t - m + 1) := by
-    apply borcherdsId_shift_3
+    apply borcherdsId_shift₃
     · rw [add_assoc, show s + m - k - 1 = s + m - (k + 1) by lia]
       exact hm (k + 1) <| Order.add_one_le_iff.mpr hk
     · rw [Int.sub_add_cancel]
@@ -578,11 +529,65 @@ lemma borcherdsId_of_antidiag_3 (a b c : V) (r s t : ℤ)
       exact ih l (by lia) (by lia)
   simpa using this n 0
 
+lemma borcherdsId_of_le₁ (a b c : V) (q r s t : ℤ) (h : ∀ u v : ℤ, borcherdsId Y a b c r u v)
+    (hq : r ≤ q) :
+    borcherdsId Y a b c q s t := by
+  refine borcherdsId_of_antidiag₁ Y a b c q s t (q - r).toNat fun _ _ ↦ ?_
+  rw [show q - (q - r).toNat = r by lia]
+  exact h _ _
 
+lemma borcherdsId_of_le₂ (a b c : V) (q r s t : ℤ) (h : ∀ u v : ℤ, borcherdsId Y a b c u s v)
+    (hq : s ≤ q) :
+    borcherdsId Y a b c r q t := by
+  refine borcherdsId_of_antidiag₂ Y a b c r q t (q - s).toNat fun _ _ ↦ ?_
+  rw [show q - (q - s).toNat = s by lia]
+  exact h _ _
 
+lemma borcherdsId_of_le₃ (a b c : V) (q r s t : ℤ) (h : ∀ u v : ℤ, borcherdsId Y a b c u v t)
+    (hq : t ≤ q) :
+    borcherdsId Y a b c r s q := by
+  refine borcherdsId_of_antidiag₃ Y a b c r s q (q - t).toNat fun _ _ ↦ ?_
+  rw [show q - (q - t).toNat = t by lia]
+  exact h _ _
 
+lemma borcherdsId_of_hyperplanes₁₂ (a b c : V) (r r₁ s s₂ t : ℤ)
+    (h₁ : ∀ (u v : ℤ), borcherdsId Y a b c r₁ u v) (h₂ : ∀ (u v : ℤ), borcherdsId Y a b c u s₂ v) :
+    borcherdsId Y a b c r s t := by
+  by_cases hr : r₁ ≤ r
+  · exact borcherdsId_of_le₁ Y a b c r r₁ s t h₁ hr
+  · by_cases hs : s₂ ≤ s
+    · exact borcherdsId_of_le₂ Y a b c s r s₂ t h₂ hs
+    · refine borcherdsId_of_antidiag₃ Y a b c r s t ((r₁ - r).toNat + (s₂ - s).toNat) ?_
+      intro k hk
+      by_cases hrk : r₁ ≤ r + k
+      · exact borcherdsId_of_le₁ Y a b c _ r₁ _ _ h₁ hrk
+      · exact borcherdsId_of_le₂ Y a b c _ _ s₂ _ h₂ (by lia)
 
--- theorem Borcherds_on_two_transverse_half_spaces_implies Borcherds_everywhere
+lemma borcherdsId_of_hyperplanes₂₃ (a b c : V) (r s s₂ t t₃ : ℤ)
+    (h₂ : ∀ (u v : ℤ), borcherdsId Y a b c u s₂ v) (h₃ : ∀ (u v : ℤ), borcherdsId Y a b c u v t₃) :
+    borcherdsId Y a b c r s t := by
+  by_cases hs : s₂ ≤ s
+  · exact borcherdsId_of_le₂ Y a b c s r s₂ t h₂ hs
+  · by_cases ht : t₃ ≤ t
+    · exact borcherdsId_of_le₃ Y a b c t r s t₃ h₃ ht
+    · refine borcherdsId_of_antidiag₁ Y a b c r s t ((s₂ - s).toNat + (t₃ - t).toNat) ?_
+      intro k hk
+      by_cases hsk : s₂ ≤ s + k
+      · exact borcherdsId_of_le₂ Y a b c _ _ s₂ _ h₂ hsk
+      · exact borcherdsId_of_le₃ Y a b c _ _ _ t₃ h₃ (by lia)
+
+lemma borcherdsId_of_hyperplanes₁₃ (a b c : V) (r r₁ s t t₃ : ℤ)
+    (h₁ : ∀ (u v : ℤ), borcherdsId Y a b c r₁ u v) (h₃ : ∀ (u v : ℤ), borcherdsId Y a b c u v t₃) :
+    borcherdsId Y a b c r s t := by
+  by_cases hr : r₁ ≤ r
+  · exact borcherdsId_of_le₁ Y a b c r r₁ s t h₁ hr
+  · by_cases ht : t₃ ≤ t
+    · exact borcherdsId_of_le₃ Y a b c t r s t₃ h₃ ht
+    · refine borcherdsId_of_antidiag₂ Y a b c r s t ((r₁ - r).toNat + (t₃ - t).toNat) ?_
+      intro k hk
+      by_cases hrk : r₁ ≤ r + k
+      · exact borcherdsId_of_le₁ Y a b c _ r₁ _ _ h₁ hrk
+      · exact borcherdsId_of_le₃ Y a b c _ _ _ t₃ h₃ (by lia)
 
 /-
 theorem vacuum_derivative_is_zero [AddCommGroup V] [UnboundedVertexMul V] [NonunitalVertexRing V] :

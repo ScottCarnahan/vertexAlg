@@ -6,7 +6,6 @@ Authors: Scott Carnahan
 module
 
 public import Mathlib.Algebra.MonoidAlgebra.PointwiseSMul
---public import Mathlib.Data.Finsupp.PointwiseSMul
 
 /-!
 Put this stuff in Mathlib.Algebra.MonoidAlgebra.PointwiseSMul
