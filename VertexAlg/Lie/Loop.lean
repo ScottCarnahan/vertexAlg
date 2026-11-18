@@ -231,7 +231,7 @@ lemma finite_support_add {α A : Type*} [AddZeroClass A] {f g : α → A} (hf : 
     Finite (f + g).support := by
   refine Finite.Set.subset (f.support ∪ g.support) ?_
   intro n hn
-  contrapose! hn
+  contrapose hn
   simp only [Set.mem_union, Function.mem_support, ne_eq, not_or, not_not] at hn
   simp [hn.1, hn.2]
 
@@ -250,7 +250,7 @@ lemma finite_support_bracket [AddCancelCommMonoid A] (a : A) (x y : A →₀ L) 
       SetLike.mem_coe, Finsupp.mem_support_iff, Subtype.forall, Set.mem_antidiagonal,
       Set.mem_univ, true_and, Prod.forall]
     intro k l _ h
-    contrapose! h
+    contrapose h
     simp [h]
   · exact fun _ _ _ _ h ↦ Set.AddAntidiagonal.eq_of_fst_eq_fst h
 
@@ -552,7 +552,7 @@ lemma twoCocycle_apply_apply_zero [HasUniqueDiv R] (Φ : LinearMap.BilinForm R L
   have := fun b hb ↦ hpq b hb a (Finsupp.mem_support_iff.mpr ha)
   contrapose! this
   use -a
-  exact ⟨by contrapose! this; simp [Finsupp.notMem_support_iff.mp this],
+  exact ⟨by contrapose this; simp [Finsupp.notMem_support_iff.mp this],
     ⟨rfl, neg_ne_zero.mpr <| left_ne_zero_of_smul this⟩⟩
 
 --Make this more general - two submonoids that don't generate nontrivial units?

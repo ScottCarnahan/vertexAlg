@@ -78,7 +78,7 @@ theorem arrowCongrLeft_coeff_notin_range {f : Γ₁ ↪ Γ₂} {A : HVertexOpera
 theorem support_arrowCongrLeft_subset {f : Γ₁ ↪ Γ₂} {A : HVertexOperator Γ₁ R V W} :
     (f.arrowCongrLeft A.coeff).support ⊆ Set.range f := by
   intro g hg
-  contrapose! hg
+  contrapose hg
   simp [Function.extend_apply' _ _ _ hg]
 
 omit [PartialOrder Γ₁] in
@@ -458,7 +458,7 @@ theorem lexComp_support_isPWO (A : HVertexOperator Γ R V W) (B : HVertexOperato
     simp only [Set.image_subset_iff, Function.support_subset_iff, Set.mem_preimage,
       Function.mem_support, Lex.forall, ofLex_toLex, Prod.forall]
     intro _ _ h
-    contrapose! h
+    contrapose h
     simp [h]
   · intro g₁
     simp only [Function.mem_support, ofLex_toLex]
@@ -690,7 +690,7 @@ theorem binomialPow_smul_coeff {g g' : Γ} (g₁ : Γ₁) (h : g < g') (n : S)
         have hij2 : ij.2 = (-(n • g) - k • (g' - g)) +ᵥ g₁ := by
           rw [← h₃, vadd_vadd, ← hk, sub_add_add_cancel, neg_add_cancel, zero_vadd]
         have : k ∈ s := by
-          contrapose! h₂
+          contrapose h₂
           rw [Finset.mem_range_succ_iff, not_le] at h₂
           rw [hij2]
           exact (exists_binomialPow_smul_support_bound g₁ h n A v).choose_spec k h₂
@@ -808,7 +808,7 @@ theorem compLeft_isPWO {Γ} [PartialOrder Γ] [PartialOrder Γ₁] (Y₁ : HStat
   refine Set.PartiallyWellOrderedOn.subsetProdLex ?_ ?_
   · refine Set.IsPWO.mono (HahnSeries.isPWO_support ((HahnModule.of R).symm x)) ?_
     intro g hg
-    contrapose! hg
+    contrapose hg
     simp only [HahnSeries.mem_support, ne_eq, not_not] at hg
     simp [hg]
   · intro g
@@ -851,7 +851,7 @@ theorem compRight_isPWO {Γ} [PartialOrder Γ] [PartialOrder Γ₁] (Y₁ : HSta
   refine Set.PartiallyWellOrderedOn.subsetProdLex ?_ ?_
   · refine Set.IsPWO.mono (HahnSeries.isPWO_support ((HahnModule.of R).symm x)) ?_
     intro g hg
-    contrapose! hg
+    contrapose hg
     simp only [HahnSeries.mem_support, ne_eq, not_not] at hg
     simp [hg]
   · intro g

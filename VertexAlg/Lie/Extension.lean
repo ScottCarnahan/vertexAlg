@@ -27,9 +27,8 @@ variable [CommRing R] [LieRing L] [LieAlgebra R L] [LieRing M] [LieAlgebra R M] 
 
 lemma IsExtension.range_eq_ker (i : N →ₗ⁅R⁆ L) (p : L →ₗ⁅R⁆ M) (h : IsExtension i p) :
     LinearMap.range i.toLinearMap = p.ker := by
-  have := h.exact
-  rw [← LieSubalgebra.coe_set_eq] at this
-  exact Submodule.ext fun x ↦ Eq.to_iff (congrFun this x)
+  rw [← h.exact]
+  exact (LieHom.range_toSubmodule i).symm
 
 lemma proj_choose_sub_mem (E : Extension R M L) {s : L →ₗ[R] E.L}
     (hs : LeftInverse E.proj s) (x : L) :

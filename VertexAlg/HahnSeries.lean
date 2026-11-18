@@ -59,7 +59,7 @@ theorem leadingTerm_ne_iff {x : HahnSeries Γ R} : x ≠ 0 ↔ leadingTerm x ≠
     rw [leadingTerm_of_ne hx]
     simp_all only [ne_eq, single_eq_zero_iff]
     exact leadingCoeff_ne_zero.mpr hx
-  · contrapose!
+  · contrapose
     intro hx
     rw [hx]
     exact leadingTerm_zero
@@ -142,14 +142,14 @@ def equivDomain (f : Γ ≃o Γ₁) : HahnSeries Γ R ≃ HahnSeries Γ₁ R whe
   { coeff g := x.coeff (f.symm g)
     isPWO_support' :=
       (x.isPWO_support.image_of_monotone f.monotone).mono fun b hb => by
-        contrapose! hb
+        contrapose hb
         rw [Function.mem_support]
         rwa [OrderIso.image_eq_preimage_symm, Set.mem_preimage] at hb }
   invFun x :=
   { coeff g := x.coeff (f g)
     isPWO_support' :=
       (x.isPWO_support.image_of_monotone f.symm.monotone).mono fun b hb => by
-        contrapose! hb
+        contrapose hb
         rw [Function.mem_support]
         rwa [OrderIso.image_eq_preimage_symm, Set.mem_preimage] at hb }
   left_inv x := by simp
@@ -443,7 +443,7 @@ def rightTensorMap {R} [CommSemiring R] [Module R V] [Module R U] :
           refine Set.IsPWO.mono ((of R).symm x).isPWO_support ?_
           intro g hg
           simp_all only [Function.mem_support, ne_eq, HahnSeries.mem_support]
-          contrapose! hg
+          contrapose hg
           exact hg ▸ zero_tmul U v }
       map_add' := by
         intro y z
@@ -471,7 +471,7 @@ def leftTensorMap {R} [CommSemiring R] [Module R V] [Module R U] :
           refine Set.IsPWO.mono ((of R).symm x).isPWO_support ?_
           intro g hg
           simp_all only [Function.mem_support, ne_eq, HahnSeries.mem_support]
-          contrapose! hg
+          contrapose hg
           exact hg ▸ tmul_zero V u }
       map_add' := by
         intro y z
@@ -671,7 +671,7 @@ instance [Semiring R] (f : F) :
     · rw [hg]
       simp
     · have : (OrderIso.ofClass f) g ≠ 0 := by
-        contrapose! hg
+        contrapose hg
         rw [show (OrderIso.ofClass f) g = f g by rfl, ← this] at hg
         exact EmbeddingLike.injective' f hg
       simp [equivDomainRingHom, this, hg]
@@ -685,7 +685,7 @@ instance [Semiring R] (f : F) :
     by_cases hg : g = 0
     · simp [h, hg]
     · have : EquivLike.inv f g ≠ 0 := by
-        contrapose! hg
+        contrapose hg
         rw [← h] at hg
         exact (EquivLike.right_inv f).injective hg
       simp [this, hg]
@@ -697,7 +697,7 @@ theorem equivDomainRingHom_single [NonAssocSemiring R] (f : F) (g : Γ) (r : R) 
   by_cases h : g' = f g
   · simp [h]
   · have : EquivLike.inv f g' ≠ g := by
-      contrapose! h
+      contrapose h
       exact EquivLike.inv_apply_eq.mp h
     simp [h, this]
 
@@ -710,7 +710,7 @@ theorem equivDomainRingHom_symm_single [NonAssocSemiring R] (f : F) (g : Γ') (r
     have : OrderIso.ofClass f g'= f g' := rfl
     simp [equivDomainRingHom, h, hinv, this]
   · have : EquivLike.inv f g ≠ g' := by
-      contrapose! h
+      contrapose h
       rw [← h, EquivLike.apply_inv_apply]
     simp [h, coeff_single_of_ne this.symm]
 

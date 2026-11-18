@@ -139,7 +139,7 @@ lemma mk_toDecompositionOfSection_apply [DecidableEq ι] [Decomposition ℳ]
         (fun i ↦ (toDecompositionOfSection ℳ i hs x)) = ∑ i ∈ ((decompose ℳ (p x)).support ⊔ {0}),
           ((of _ i) (toDecompositionOfSection ℳ i hs x)) := by
   ext i
-  simp only [Finset.sup_eq_union', SetLike.coe_sort_coe, Finset.union_singleton, sum_apply,
+  simp only [SetLike.coe_sort_coe, Finset.union_singleton, sum_apply,
     AddSubmonoidClass.coe_finsetSum]
   simp only [DirectSum.mk, SetLike.coe_sort_coe, AddMonoidHom.coe_mk, ZeroHom.coe_mk,
     DFinsupp.mk_apply, Finset.union_singleton, Finset.mem_insert, DFinsupp.mem_support_toFun, ne_eq]
@@ -156,10 +156,10 @@ lemma mk_toDecompositionOfSection_apply [DecidableEq ι] [Decomposition ℳ]
     rw [of_eq_of_ne j i _ hji.symm]
   · intro hi
     have hi0 : i ≠ 0 := by
-      contrapose! hi
+      contrapose hi
       exact Finset.mem_insert.mpr <| Or.inl hi
     have his : i ∉ DFinsupp.support ((decompose ℳ) (p x)) := by
-      contrapose! hi
+      contrapose hi
       exact Finset.mem_insert_of_mem hi
     simp only [DFinsupp.mem_support_toFun, ne_eq, not_not] at his
     simp [toDecompositionOfSection, hi0, ← apply_eq_component, his]

@@ -94,7 +94,7 @@ lemma notMem_range_complement (x : V →ₗ[K] K) (y : ℙ K V) (hy : y ∈ x.ke
   simp only [complement_apply] at h
   obtain ⟨z, hz⟩ := z
   have hxz : x z = 1 := hz
-  have hx := LinearMap.mem_ker.mp (hy ((mem_submodule_iff y.rep_nonzero).mpr (mk_rep y)))
+  have hx := LinearMap.mem_ker.mp (hy ((mem_submodule_iff y.rep_ne_zero).mpr (mk_rep y)))
   have : x (mk K z (fun h0 ↦ by simp [h0] at hxz)).rep = 0 := by rw [h, hx]
   obtain ⟨c, hc⟩ := exists_smul_eq_mk_rep K z (fun h0 ↦ by simp [h0] at hxz)
   rw [← hc, Units.smul_def, map_smul, hxz, smul_eq_mul, mul_one] at this

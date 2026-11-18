@@ -149,7 +149,7 @@ lemma degree_shiftEquiv (m : MonomialOrder σ) (f : MvPolynomial σ R) (h : σ �
     · by_cases hf : f = 0; · simpa [hf] using ih2
       have : m.degree f ≺[m] m.degree ((monomial a) b) := by
         refine Std.lt_of_le_of_ne (Std.not_lt.mp hd) <| m.toSyn.injective.ne ?_
-        contrapose! ha
+        contrapose ha
         classical
         have : m.degree f = a := by simpa [MonomialOrder.degree_monomial, hb] using ha
         exact this ▸ m.degree_mem_support hf
@@ -457,7 +457,7 @@ theorem leadingTermOf_mul_X (i j : σ) (f : MvPolynomial σ R) [Nontrivial R] :
         by_cases hij : i = j
         · simp only [← hij, single_eq_same]
           rw [← pow_one (X i), degreeOf_mul_X_self_pow_eq_add_of_ne_zero, h, add_comm]
-          contrapose! ha
+          contrapose ha
           simp [ha]
         · rwa [single_eq_of_ne hij, degreeOf_mul_X_of_ne _ hij, zero_add]
       ext b
@@ -466,14 +466,14 @@ theorem leadingTermOf_mul_X (i j : σ) (f : MvPolynomial σ R) [Nontrivial R] :
       · simp only [← hij, h, ↓reduceIte, zero_mul, Finsupp.coe_add, Pi.add_apply, single_eq_same,
         coeff_mul_X, right_eq_ite_iff]
         have : degreeOf i (f * X i) ≠ a i + 1 := by
-          contrapose! h
+          contrapose h
           rw [← pow_one (X i), degreeOf_mul_X_self_pow_eq_add_of_ne_zero] at h
           · exact Nat.add_right_cancel h
-          · contrapose! ha
+          · contrapose ha
             simp [ha]
         exact fun h ↦ (not_neZero.mp fun a ↦ this h).symm
       · have : degreeOf i (f * X j) ≠ a i := by
-          contrapose! h
+          contrapose h
           rwa [← pow_one (X j), degreeOf_mul_X_pow_of_ne _ hij] at h
         simp [h, single_eq_of_ne hij, this]
 

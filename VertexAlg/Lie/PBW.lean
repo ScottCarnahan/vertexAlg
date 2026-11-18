@@ -59,50 +59,24 @@ variable {ι σ A B R L M N : Type*}
 
 section filtration
 
-variable [DecidableEq ι] [AddCommMonoid ι] [PartialOrder ι] [IsOrderedAddMonoid ι] [CommSemiring R]
-  [Semiring A] [Algebra R A] (𝒜 : ι → Submodule R A) [GradedAlgebra 𝒜]
+variable [AddCommMonoid ι] [PartialOrder ι] [CommSemiring R]
+  [Semiring A] [Algebra R A] (F : ι → Submodule R A)
 
 open DirectSum
 
-lemma isRingFiltration_of_graded :
-    IsRingFiltration (fun i ↦ ⨆ j ≤ i, 𝒜 j) (fun i ↦ ⨆ j < i, 𝒜 j) where
-  mono _ j h := by
-    simp only [iSup_le_iff]
-    intro i hi
-    refine le_iSup_of_le i ?_
-    rw [le_iSup_iff]
-    have : i ≤ j := hi.trans h
-    tauto
-  is_le {_ j} h := by
-    simp only [iSup_le_iff]
-    intro i hi
-    refine le_iSup_of_le i ?_
-    rw [le_iSup_iff]
-    have : i < j := lt_of_le_of_lt hi h
-    tauto
-  is_sup _ _ h := by
-    simp only [iSup_le_iff]
-    intro i hi
-    simp only [iSup_le_iff] at h
-    exact h i hi i (Std.IsPreorder.le_refl i)
-  one_mem := mem_of_le_of_mem (S := 𝒜 0)
-    (le_iSup_iff.mpr fun _ h ↦ (by simpa using h 0)) (SetLike.one_mem_graded 𝒜)
-  mul_mem {i j} gi gj hi hj := by
-    classical
-    obtain ⟨fgi, hgi⟩ := (Submodule.mem_biSup_iff_exists_dfinsupp (fun k ↦ k ≤ i) 𝒜 gi).mp hi
-    obtain ⟨fgj, hgj⟩ := (Submodule.mem_biSup_iff_exists_dfinsupp (fun k ↦ k ≤ j) 𝒜 gj).mp hj
-    rw [← hgi, ← hgj]
-    simp only [DFinsupp.lsum_apply_apply, DFinsupp.sumAddHom_apply, DFinsupp.sum,
-      DFinsupp.support_filter, DFinsupp.filter_apply, LinearMap.toAddMonoidHom_coe,
-      Submodule.subtype_apply, Finset.sum_mul_sum]
-    refine sum_mem fun k hk ↦ sum_mem fun l hl ↦ ?_
-    have hki : k ≤ i := by grind
-    have hlj : l ≤ j := by grind
-    simp only [hki, ↓reduceIte, hlj]
-    refine Set.mem_of_subset_of_mem (le_sSup (α := Submodule R A) ?_) <|
-      SetLike.mul_mem_graded (Submodule.coe_mem (fgi k)) (Submodule.coe_mem (fgj l))
-    use k + l
-    simp [add_le_add hki hlj]
+lemma isRingFiltration_of_graded [AddLeftMono ι] [SetLike.GradedMonoid F] :
+    IsRingFiltration (fun i ↦ ⨆ j ≤ i, F j) (fun i ↦ ⨆ j < i, F j) where
+  mono _ _ h := biSup_mono fun _ hk ↦ hk.trans h
+  is_le h := biSup_mono fun _ hk ↦ hk.trans_lt h
+  is_sup _ _ h :=
+    iSup₂_le fun k hk ↦ (le_iSup₂ (f := fun j (_ : j ≤ k) ↦ F j) k le_rfl).trans (h k hk)
+  one_mem := le_iSup₂ (f := fun j (_ : j ≤ 0) ↦ F j) 0 le_rfl (SetLike.one_mem_graded F)
+  mul_mem {i j} _ _ hx hy := by
+    suffices (⨆ k ≤ i, F k) * (⨆ l ≤ j, F l) ≤ ⨆ m ≤ i + j, F m from
+      this (Submodule.mul_mem_mul hx hy)
+    simp_rw [Submodule.iSup_mul, Submodule.mul_iSup, iSup_le_iff]
+    exact fun k hk l hl ↦ le_iSup₂_of_le (k + l) (add_le_add hk hl)
+      (Submodule.mul_le.mpr fun _ ha _ hb ↦ SetLike.mul_mem_graded ha hb)
 
 end filtration
 
@@ -149,7 +123,8 @@ variable {ι A σ : Type*} [Preorder ι] [CompleteLattice σ] [SetLike σ A]
 
 lemma IsFiltration.f_lt_eq_sup (i : ι) :
     F_lt i = ⨆ j < i, F j :=
-  le_antisymm_iff.mpr ⟨IsFiltration.is_sup (⨆ j < i, F j) i fun _ h ↦ le_biSup F h,
+  le_antisymm_iff.mpr ⟨IsFiltration.is_sup (F := F) (⨆ j < i, F j) i fun j h ↦
+    le_iSup₂_of_le j h (le_refl F j),
     iSup₂_le fun _ h ↦ IsFiltration.is_le h⟩
 
 end
@@ -286,6 +261,13 @@ lemma mem_reesPart_iff_exists [DecidableEq ι] (i : ι) (x : reesAlg F) :
     simp only [reesPart, part, LinearMap.mem_range, lof_eq_of]
     use y
 
+lemma zero_of_mem_reesPart_of_ne [DecidableEq ι] {i j : ι} (hij : i ≠ j) {x : reesAlg F}
+    (hx : x ∈ reesPart F i) :
+    x j = 0 := by
+  simp only [reesPart, part, LinearMap.mem_range] at hx
+  obtain ⟨y, hy⟩ := hx
+  rw [← hy, lof_eq_of, of_eq_of_ne (β := fun i ↦ F i) i j y hij.symm]
+
 /-- The linear map from `F i` to `reesPart F i` -/
 noncomputable def toReesPart [DecidableEq ι] (i : ι) : F i ≃ₗ[R] reesPart F i :=
   LinearEquiv.ofInjective (lof R ι (fun i ↦ F i) i)
@@ -306,9 +288,7 @@ instance [DecidableEq ι] :
     rw [← ha, ← hb, of_mul_of]
     simp [reesPart, part, lof_eq_of, exists_apply_eq_apply]
 
-/-
-noncomputable instance [DecidableEq ι] :
-    GradedRing (fun i ↦ (reesPart F i)) where
+noncomputable instance [DecidableEq ι] : GradedAlgebra (reesPart F) where
   one_mem := by
     simp only [reesPart, part, LinearMap.mem_range]
     use 1
@@ -322,19 +302,65 @@ noncomputable instance [DecidableEq ι] :
     simp [reesPart, part, lof_eq_of, exists_apply_eq_apply]
   decompose' := map (fun i ↦ (toReesPart F i))
   left_inv x := by
-    ext i
-    simp [reesPart, part]
-
-
-    sorry
+    induction x using DirectSum.induction_on with
+    | zero => simp
+    | of i x => simp
+    | add x y hx hy => simp [hx, hy]
   right_inv x := by
-    ext i j
-    simp [toReesPart, reesPart, part]
+    induction x using DirectSum.induction_on with
+    | zero => simp
+    | of i x =>
+      simp only [coeAddMonoidHom_of]
+      ext j k
+      simp only [map_apply, AddMonoidHom.coe_ofClass, toReesPart_apply, SetLike.coe_eq_coe]
+      by_cases hij : i = j
+      · rw [← hij]
+        simp only [of_eq_same]
+        by_cases hik : i = k
+        · rw [← hik]
+          simp
+        · rw [zero_of_mem_reesPart_of_ne F hik, zero_of_mem_reesPart_of_ne F hik]
+          · obtain ⟨x, hx⟩ := x
+            exact hx
+          · refine (mem_reesPart_iff_exists F i _).mpr ?_
+            use x.val i
+      · obtain ⟨x, hx⟩ := x
+        rw [of_eq_of_ne i j _ (Ne.symm hij), zero_of_mem_reesPart_of_ne F hij]
+        · simp
+        · exact hx
+    | add x y hx hy => simp [hx, hy]
+
+/-
+def reesIdeal [DecidableEq ι] : Ideal (reesAlg F) where
+  carrier x := ∀ i, (x i).val ∈ F_lt i
+  add_mem' {a b} ha hb i := by
+    rw [DirectSum.add_apply, Submodule.coe_add]
+    exact (Submodule.add_mem_iff_left (F_lt i) (hb i)).mpr (ha i)
+  zero_mem' i := by simp
+  smul_mem' a b h i := by
+    induction a using DirectSum.induction_on with
+    | zero => simp
+    | of j x =>
+      induction b using DirectSum.induction_on generalizing x with
+      | zero => simp
+      | of k y =>
+        simp only [smul_eq_mul]
+        by_cases hijk : j + k = i
+        · rw [← hijk]
+          apply mul_mem_f_lt' F F_lt j k
+        sorry
+      | add y z hy hz =>
+        simp only [smul_eq_mul] at hy hz
+        rw [smul_eq_mul, mul_add, DirectSum.add_apply, Submodule.coe_add]
+        (refine Submodule.add_mem (F_lt _) ?_ ?_)
+        · apply hy
 
 
-    sorry
+    | add x y hx hy =>
+      simp only [smul_eq_mul] at hx hy
+      simp only [smul_eq_mul, add_mul, DirectSum.add_apply, Submodule.coe_add]
+      exact (Submodule.add_mem_iff_left (F_lt i) hy).mpr hx
 -/
---instance Ideal rees
 
 /-- The multiplication on filtered pieces -/
 def filteredMul (i j : ι) : F i →ₗ[R] F j →ₗ[R] F (i + j) where

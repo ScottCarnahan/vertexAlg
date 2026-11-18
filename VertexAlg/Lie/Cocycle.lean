@@ -265,12 +265,12 @@ namespace MultilinearMap
 variable {L M R : Type*} [Semiring R] [AddCommMonoid L] [AddCommGroup M] [Module R L] [Module R M]
 
 lemma cons_zero {n : ℕ} (g : Fin n → L)
-    (f : MultilinearMap R (fun _ : Fin (n + 1) => L) M) :
+    (f : MultilinearMap (RingHom.id R) (fun _ : Fin (n + 1) => L) M) :
     f (Fin.cons 0 g) = 0 :=
   map_coord_zero f 0 rfl
 
 lemma removeNth_map_update_add {n : ℕ}
-    (f : MultilinearMap R (fun _ : Fin n => L) M)
+    (f : MultilinearMap (RingHom.id R) (fun _ : Fin n => L) M)
     {i j : Fin (n + 1)} (h : i ≠ j) (x y : L) (g : Fin (n + 1) → L):
   f (i.removeNth (Function.update g j (x + y))) =
     f (i.removeNth (Function.update g j x)) + f (i.removeNth (Function.update g j y)) := by
@@ -324,8 +324,8 @@ variable {L M R : Type*} [CommRing R] [LieRing L] [LieAlgebra R L] [AddCommGroup
   [LieRingModule L M] [LieModule R L M]
 
 /-- version with removeNth -/
-def coboundary_first_summand {n : ℕ} (f : MultilinearMap R (fun _ : Fin n => L) M)
-    (i : Fin (n + 1)) : MultilinearMap R (fun _ : Fin (n + 1) => L) M where
+def coboundary_first_summand {n : ℕ} (f : MultilinearMap (RingHom.id R) (fun _ : Fin n => L) M)
+    (i : Fin (n + 1)) : MultilinearMap (RingHom.id R) (fun _ : Fin (n + 1) => L) M where
   toFun g := (Int.negOnePow i.val • ⁅g i, f (i.removeNth g)⁆)
   map_update_add' {inst} g j x y := by
     cases Subsingleton.elim inst (instDecidableEqFin (n + 1))
@@ -344,7 +344,7 @@ def coboundary_first_summand {n : ℕ} (f : MultilinearMap R (fun _ : Fin n => L
     by_cases hij : i = j
     · have (z : L) : i.removeNth (Function.update g i z) = i.removeNth g := by
         convert Fin.removeNth_update i _ g
-      simp only [Function.update, ← hij, ↓reduceDIte, eq_rec_constant, this, smul_lie]
+      simp [Function.update, ← hij]
     · simp only [Function.update_of_ne hij, ← lie_smul]
       congr 1
       rcases lt_or_gt_of_ne hij with (hlt | hgt)
@@ -410,7 +410,8 @@ def coboundary_second_sum (n : ℕ) (f : L [⋀^Fin (n + 1)]→ₗ[R] M) (g : Fi
 
 /-- The image of the second sum of the differential on a cochain, as a multilinear map. -/
 def coboundary_second_summand_multilinear (n : ℕ) (f : L [⋀^Fin (n + 1)]→ₗ[R] M)
-    {i j : Fin (n + 1 + 1)} (h : i < j) : MultilinearMap R (fun _ : Fin (n + 1 + 1) => L) M where
+    {i j : Fin (n + 1 + 1)} (h : i < j) :
+    MultilinearMap (RingHom.id R) (fun _ : Fin (n + 1 + 1) => L) M where
   toFun g := Int.negOnePow (i.val + j.val) • f (coboundary_second_aux g h)
   map_update_add' {inst} g k x y := by
     cases Subsingleton.elim inst (instDecidableEqFin (n + 1 + 1))
@@ -451,7 +452,7 @@ def coboundary_second_summand_multilinear (n : ℕ) (f : L [⋀^Fin (n + 1)]→�
             simp [Fin.removeNth_update_of_gt this]
   map_update_smul' {inst} g k r x := by
     cases Subsingleton.elim inst (instDecidableEqFin (n + 1 + 1))
-    simp only [coboundary_second_aux]
+    simp only [coboundary_second_aux, RingHom.id_apply]
     rw [smul_comm r (Int.negOnePow (i.val + j.val)) _]
     congr 1
     obtain hki | hki | hki := lt_trichotomy k i
@@ -492,7 +493,7 @@ def coboundary_second_summand_multilinear (n : ℕ) (f : L [⋀^Fin (n + 1)]→�
 
 /-- The second sum in the Lie algebra coboundary map, as a multilinear map. -/
 def coboundary_second_multilinear (n : ℕ) (f : L [⋀^Fin (n + 1)]→ₗ[R] M) :
-    MultilinearMap R (fun _ : Fin (n + 1 + 1) => L) M :=
+    MultilinearMap (RingHom.id R) (fun _ : Fin (n + 1 + 1) => L) M :=
   ∑ i ∈ Finset.univ (α := Fin (n + 1 + 1)), ∑ j ∈ Finset.univ (α := Fin (n + 1 + 1)),
     if h : j < i then coboundary_second_summand_multilinear n f h else 0
 

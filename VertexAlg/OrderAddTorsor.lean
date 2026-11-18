@@ -22,7 +22,7 @@ theorem lt_of_smul_lt_smul_left [PartialOrder G] [PartialOrder P] [SMul G P]
     [IsOrderedCancelSMul G P] {a : G} {b c : P} (h₁ : a • b < a • c) :
     b < c := by
   refine lt_of_le_of_ne (IsOrderedCancelSMul.le_of_smul_le_smul_left a b c (le_of_lt h₁)) ?_
-  contrapose! h₁
+  contrapose h₁
   rw [h₁]
   exact lt_irrefl (a • c)
 
@@ -30,7 +30,7 @@ theorem lt_of_smul_lt_smul_left [PartialOrder G] [PartialOrder P] [SMul G P]
 theorem lt_of_smul_lt_smul_right [PartialOrder G] [PartialOrder P] [SMul G P]
     [IsOrderedCancelSMul G P] {a b : G} {c : P} (h₁ : a • c < b • c) : a < b := by
   refine lt_of_le_of_ne (IsOrderedCancelSMul.le_of_smul_le_smul_right a b c (le_of_lt h₁)) ?_
-  contrapose! h₁
+  contrapose h₁
   rw [h₁]
   exact lt_irrefl (b • c)
 

@@ -229,7 +229,7 @@ theorem binomCompLeft_one_left_nat_coeff (n : ℕ) (g : ℤ ×ₗ ℤ) :
       have hng : (ofLex g).2 ≤ n := by omega
       simp only [this, hng, ↓reduceIte]
       congr 1
-      simp only [zsmul_eq_mul, Module.End.mul_apply, Module.End.intCast_apply, coeff_apply_apply]
+      simp only [zsmul_eq_mul, mul_apply_eq_comp, intCast_apply_eq_smul, coeff_apply_apply]
       abel_nf
     · rw [HahnSeries.coeff_single_of_ne h]
       simp [show ¬ (ofLex g).2 ≤ n by omega]
@@ -522,7 +522,7 @@ lemma resProdLeft_hasseDeriv_left (m : ℕ) (k : ℤ) (A B : VertexOperator R V)
   rw [← coeff_apply_apply, ← coeff_apply_apply]
   simp only [coeff_eq_ncoeff, resProdLeft_apply_ncoeff, Module.End.smul_def, map_zsmul_unit,
     LinearMap.map_smul_of_tower, zsmul_eq_mul, Pi.smul_apply, Pi.mul_apply, Pi.intCast_apply,
-    LinearMap.smul_apply, Module.End.mul_apply, Module.End.intCast_apply]
+    LinearMap.smul_apply, mul_apply_eq_comp, intCast_apply_eq_smul]
   rw [← smul_assoc (Int.negOnePow m), smul_finsum', finsum_congr]
   · intro r
     rw [hasseDeriv_ncoeff, smul_comm _ (Int.negOnePow r), smul_assoc (Int.negOnePow m),
@@ -531,8 +531,8 @@ lemma resProdLeft_hasseDeriv_left (m : ℕ) (k : ℤ) (A B : VertexOperator R V)
     congr 1
     rw [show -(k - r) - 1 + m = -(k - r + 1 - m) by omega, Ring.choose_neg,
       show k - r + 1 - m + m - 1 = k - r by omega]
-    simp only [smul_assoc, zsmul_eq_mul, LinearMap.smul_apply, Module.End.mul_apply,
-      Module.End.intCast_apply, nsmul_eq_mul]
+    simp only [smul_assoc, zsmul_eq_mul, LinearMap.smul_apply, mul_apply_eq_comp,
+      intCast_apply_eq_smul, nsmul_eq_mul]
     rw [smul_comm (Int.negOnePow m), ← smul_assoc (Ring.choose k r), smul_eq_mul,
       ← Ring.choose_add_smul_choose']
     congr 2
@@ -546,7 +546,7 @@ lemma resProdLeft_hasseDeriv_left (m : ℕ) (k : ℤ) (A B : VertexOperator R V)
       Ring.choose (k - ↑m) i • (ncoeff A (k - ↑m - ↑i)) ((ncoeff B (-n - 1 + ↑i)) v)) ?_
     intro i hi
     simp only [Function.mem_support, ne_eq] at ⊢ hi
-    contrapose! hi
+    contrapose hi
     simp [hi]
 
 /-- The right side of the `m`-th residue product, given by the residue of `(x-y)^m B(x)A(y) dx` at
@@ -662,12 +662,12 @@ lemma resProdRight_hasseDeriv_left (m : ℕ) (k : ℤ) (A B : VertexOperator R V
       finsum_mem_univ, ← coeff_apply_apply, coeff_eq_ncoeff]
     simp only [Module.End.smul_def, map_zsmul_unit, LinearMap.map_smul_of_tower,
       zsmul_eq_mul, Pi.smul_apply, Pi.mul_apply, Pi.intCast_apply, LinearMap.smul_apply,
-      Module.End.mul_apply, resProdRight_apply_ncoeff, Module.End.intCast_apply]
+      mul_apply_eq_comp, resProdRight_apply_ncoeff, intCast_apply_eq_smul]
     rw [← smul_assoc _ (k - m).negOnePow, Units.smul_eq_mul, ← Int.negOnePow_add, add_sub_cancel]
     congr 1
     rw [smul_finsum' _ (finite_supp_ncoeff_ncoeff_right n (k - m) A B v), finsum_congr]
     intro i
-    simp only [hasseDeriv_ncoeff, zsmul_eq_mul, Module.End.mul_apply, Module.End.intCast_apply,
+    simp only [hasseDeriv_ncoeff, zsmul_eq_mul, mul_apply_eq_comp, intCast_apply_eq_smul,
       LinearMap.map_smul_of_tower]
     rw [show -(i + m : ℕ) - 1 + (m : ℤ) = - (i + 1) by omega, Ring.choose_neg, show
       (i : ℤ) + 1 + m - 1 = (m + i : ℕ) by omega, smul_comm (Ring.choose k (i + m)), smul_assoc,
